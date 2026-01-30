@@ -1,0 +1,162 @@
+-- Reminder table for tracking tasks and notifications
+CREATE TABLE ReminderEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    animal_id TEXT,
+    title TEXT NOT NULL,
+    description TEXT,
+    reminder_type TEXT NOT NULL,
+    due_date TEXT NOT NULL,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    is_recurring INTEGER NOT NULL DEFAULT 0,
+    recurrence_interval_days INTEGER,
+    source_event_id TEXT,
+    custom_data TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (animal_id) REFERENCES AnimalEntity(id) ON DELETE CASCADE,
+    FOREIGN KEY (source_event_id) REFERENCES AnimalEventEntity(id) ON DELETE SET NULL
+);
+
+-- Indexes for common queries
+CREATE INDEX reminder_animal_idx ON ReminderEntity(animal_id);
+CREATE INDEX reminder_due_date_idx ON ReminderEntity(due_date);
+CREATE INDEX reminder_type_idx ON ReminderEntity(reminder_type);
+CREATE INDEX reminder_completed_idx ON ReminderEntity(is_completed);
+
+-- Get all reminders
+selectAll:
+SELECT *
+FROM ReminderEntity
+ORDER BY due_date ASC;
+
+-- Get pending (not completed) reminders
+selectPending:
+SELECT *
+FROM ReminderEntity
+WHERE is_completed = 0
+ORDER BY due_date ASC;
+
+-- Get pending reminders due within date range
+selectPendingInRange:
+SELECT *
+FROM ReminderEntity
+WHERE is_completed = 0 AND due_date >= ? AND due_date <= ?
+ORDER BY due_date ASC;
+
+-- Get reminders for an animal
+selectByAnimalId:
+SELECT *
+FROM ReminderEntity
+WHERE animal_id = ?
+ORDER BY due_date ASC;
+
+-- Get pending reminders for an animal
+selectPendingByAnimalId:
+SELECT *
+FROM ReminderEntity
+WHERE animal_id = ? AND is_completed = 0
+ORDER BY due_date ASC;
+
+-- Get reminder by ID
+selectById:
+SELECT *
+FROM ReminderEntity
+WHERE id = ?;
+
+-- Get reminders by type
+selectByType:
+SELECT *
+FROM ReminderEntity
+WHERE reminder_type = ? AND is_completed = 0
+ORDER BY due_date ASC;
+
+-- Get upcoming reminders (next N days)
+selectUpcoming:
+SELECT *
+FROM ReminderEntity
+WHERE is_completed = 0 AND due_date <= ?
+ORDER BY due_date ASC
+LIMIT ?;
+
+-- Get overdue reminders
+selectOverdue:
+SELECT *
+FROM ReminderEntity
+WHERE is_completed = 0 AND due_date < ?
+ORDER BY due_date ASC;
+
+-- Get reminders by source event
+selectBySourceEvent:
+SELECT *
+FROM ReminderEntity
+WHERE source_event_id = ?;
+
+-- Count pending reminders
+countPending:
+SELECT COUNT(*)
+FROM ReminderEntity
+WHERE is_completed = 0;
+
+-- Count overdue reminders
+countOverdue:
+SELECT COUNT(*)
+FROM ReminderEntity
+WHERE is_completed = 0 AND due_date < ?;
+
+-- Insert reminder
+insert:
+INSERT INTO ReminderEntity(
+    id, animal_id, title, description, reminder_type, due_date,
+    is_completed, is_recurring, recurrence_interval_days,
+    source_event_id, custom_data, created_at, updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update reminder
+update:
+UPDATE ReminderEntity
+SET title = ?,
+    description = ?,
+    reminder_type = ?,
+    due_date = ?,
+    is_recurring = ?,
+    recurrence_interval_days = ?,
+    custom_data = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- Mark reminder as completed
+markCompleted:
+UPDATE ReminderEntity
+SET is_completed = 1, updated_at = ?
+WHERE id = ?;
+
+-- Mark reminder as pending (uncomplete)
+markPending:
+UPDATE ReminderEntity
+SET is_completed = 0, updated_at = ?
+WHERE id = ?;
+
+-- Delete reminder
+delete:
+DELETE FROM ReminderEntity
+WHERE id = ?;
+
+-- Delete reminders for an animal
+deleteByAnimal:
+DELETE FROM ReminderEntity
+WHERE animal_id = ?;
+
+-- Delete reminders by source event
+deleteBySourceEvent:
+DELETE FROM ReminderEntity
+WHERE source_event_id = ?;
+
+-- Delete completed reminders older than date
+deleteCompletedOlderThan:
+DELETE FROM ReminderEntity
+WHERE is_completed = 1 AND due_date < ?;
+
+-- Delete all reminders
+deleteAll:
+DELETE FROM ReminderEntity;

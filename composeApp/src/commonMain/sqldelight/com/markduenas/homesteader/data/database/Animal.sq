@@ -1,0 +1,128 @@
+-- Animal table for livestock management
+CREATE TABLE AnimalEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    tag_id TEXT,
+    name TEXT,
+    species TEXT NOT NULL,
+    breed TEXT,
+    sex TEXT NOT NULL,
+    birth_date TEXT,
+    acquisition_date TEXT,
+    status TEXT NOT NULL DEFAULT 'active',
+    mother_id TEXT,
+    father_id TEXT,
+    notes TEXT,
+    photo_uri TEXT,
+    custom_fields TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (mother_id) REFERENCES AnimalEntity(id) ON DELETE SET NULL,
+    FOREIGN KEY (father_id) REFERENCES AnimalEntity(id) ON DELETE SET NULL
+);
+
+-- Indexes for common queries
+CREATE INDEX animal_species_idx ON AnimalEntity(species);
+CREATE INDEX animal_status_idx ON AnimalEntity(status);
+CREATE INDEX animal_tag_idx ON AnimalEntity(tag_id);
+
+-- Get all animals
+selectAll:
+SELECT *
+FROM AnimalEntity
+ORDER BY updated_at DESC;
+
+-- Get all animals by species
+selectBySpecies:
+SELECT *
+FROM AnimalEntity
+WHERE species = ?
+ORDER BY updated_at DESC;
+
+-- Get all animals by status
+selectByStatus:
+SELECT *
+FROM AnimalEntity
+WHERE status = ?
+ORDER BY updated_at DESC;
+
+-- Get animal by ID
+selectById:
+SELECT *
+FROM AnimalEntity
+WHERE id = ?;
+
+-- Get animals by parent (for offspring lookup)
+selectByMother:
+SELECT *
+FROM AnimalEntity
+WHERE mother_id = ?
+ORDER BY birth_date DESC;
+
+selectByFather:
+SELECT *
+FROM AnimalEntity
+WHERE father_id = ?
+ORDER BY birth_date DESC;
+
+-- Search animals by name or tag
+searchAnimals:
+SELECT *
+FROM AnimalEntity
+WHERE name LIKE '%' || ? || '%' OR tag_id LIKE '%' || ? || '%'
+ORDER BY updated_at DESC;
+
+-- Count animals by species
+countBySpecies:
+SELECT species, COUNT(*) AS count
+FROM AnimalEntity
+WHERE status = 'active'
+GROUP BY species;
+
+-- Count all active animals
+countActive:
+SELECT COUNT(*)
+FROM AnimalEntity
+WHERE status = 'active';
+
+-- Insert new animal
+insert:
+INSERT INTO AnimalEntity(
+    id, tag_id, name, species, breed, sex, birth_date,
+    acquisition_date, status, mother_id, father_id,
+    notes, photo_uri, custom_fields, created_at, updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update animal
+update:
+UPDATE AnimalEntity
+SET tag_id = ?,
+    name = ?,
+    species = ?,
+    breed = ?,
+    sex = ?,
+    birth_date = ?,
+    acquisition_date = ?,
+    status = ?,
+    mother_id = ?,
+    father_id = ?,
+    notes = ?,
+    photo_uri = ?,
+    custom_fields = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- Update animal status
+updateStatus:
+UPDATE AnimalEntity
+SET status = ?, updated_at = ?
+WHERE id = ?;
+
+-- Delete animal
+delete:
+DELETE FROM AnimalEntity
+WHERE id = ?;
+
+-- Delete all animals (for testing/reset)
+deleteAll:
+DELETE FROM AnimalEntity;

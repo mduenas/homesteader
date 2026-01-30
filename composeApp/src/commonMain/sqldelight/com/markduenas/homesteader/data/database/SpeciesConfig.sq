@@ -1,0 +1,92 @@
+-- Species configuration table
+CREATE TABLE SpeciesConfigEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    species_key TEXT NOT NULL UNIQUE,
+    display_name TEXT NOT NULL,
+    icon_name TEXT,
+    is_enabled INTEGER NOT NULL DEFAULT 1,
+    track_breeding INTEGER NOT NULL DEFAULT 0,
+    track_pregnancy INTEGER NOT NULL DEFAULT 0,
+    track_milk_production INTEGER NOT NULL DEFAULT 0,
+    track_egg_production INTEGER NOT NULL DEFAULT 0,
+    track_weight INTEGER NOT NULL DEFAULT 0,
+    track_feed INTEGER NOT NULL DEFAULT 0,
+    track_health INTEGER NOT NULL DEFAULT 1,
+    gestation_days INTEGER,
+    heat_cycle_days INTEGER,
+    weaning_age_days INTEGER,
+    custom_fields_schema TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+-- Get all species configs
+selectAll:
+SELECT *
+FROM SpeciesConfigEntity
+ORDER BY display_name ASC;
+
+-- Get enabled species only
+selectEnabled:
+SELECT *
+FROM SpeciesConfigEntity
+WHERE is_enabled = 1
+ORDER BY display_name ASC;
+
+-- Get species config by key
+selectByKey:
+SELECT *
+FROM SpeciesConfigEntity
+WHERE species_key = ?;
+
+-- Get species config by ID
+selectById:
+SELECT *
+FROM SpeciesConfigEntity
+WHERE id = ?;
+
+-- Insert species config
+insert:
+INSERT INTO SpeciesConfigEntity(
+    id, species_key, display_name, icon_name, is_enabled,
+    track_breeding, track_pregnancy, track_milk_production,
+    track_egg_production, track_weight, track_feed, track_health,
+    gestation_days, heat_cycle_days, weaning_age_days,
+    custom_fields_schema, created_at, updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update species config
+update:
+UPDATE SpeciesConfigEntity
+SET display_name = ?,
+    icon_name = ?,
+    is_enabled = ?,
+    track_breeding = ?,
+    track_pregnancy = ?,
+    track_milk_production = ?,
+    track_egg_production = ?,
+    track_weight = ?,
+    track_feed = ?,
+    track_health = ?,
+    gestation_days = ?,
+    heat_cycle_days = ?,
+    weaning_age_days = ?,
+    custom_fields_schema = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- Toggle species enabled
+toggleEnabled:
+UPDATE SpeciesConfigEntity
+SET is_enabled = ?, updated_at = ?
+WHERE id = ?;
+
+-- Delete species config
+delete:
+DELETE FROM SpeciesConfigEntity
+WHERE id = ?;
+
+-- Delete all (for reset)
+deleteAll:
+DELETE FROM SpeciesConfigEntity;
