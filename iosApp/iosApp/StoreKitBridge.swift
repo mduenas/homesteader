@@ -4,7 +4,7 @@ import ComposeApp
 
 /// StoreKit implementation that bridges to the Kotlin IosStoreKitDelegate interface.
 @MainActor
-class StoreKitDelegate: NSObject, IosStoreKitDelegate {
+class StoreKitDelegate: NSObject {
 
     private var products: [Product] = []
     private var onReadyCallback: (() -> Void)?
@@ -135,8 +135,9 @@ enum StoreError: Error {
 }
 
 /// Non-actor wrapper for initializing from non-async context
-class StoreKitDelegateWrapper: IosStoreKitDelegate {
-    private let delegate = StoreKitDelegate()
+class StoreKitDelegateWrapper: @preconcurrency IosStoreKitDelegate {
+    // Use nonisolated(unsafe) for the delegate since we always access it on MainActor
+    nonisolated(unsafe) private var delegate: StoreKitDelegate?
 
     func initialize(
         onReady: @escaping () -> Void,
@@ -144,7 +145,9 @@ class StoreKitDelegateWrapper: IosStoreKitDelegate {
         onPurchaseCompleted: @escaping () -> Void
     ) {
         Task { @MainActor in
-            delegate.initialize(
+            let newDelegate = StoreKitDelegate()
+            self.delegate = newDelegate
+            newDelegate.initialize(
                 onReady: onReady,
                 onProductLoaded: onProductLoaded,
                 onPurchaseCompleted: onPurchaseCompleted
@@ -154,27 +157,20 @@ class StoreKitDelegateWrapper: IosStoreKitDelegate {
 
     func queryProducts(productId: String) {
         Task { @MainActor in
-            delegate.queryProducts(productId: productId)
+            delegate?.queryProducts(productId: productId)
         }
     }
 
     func purchase(productId: String) -> BillingResult {
-        // Launch on main actor
-        var result: BillingResult = BillingResult.Success()
-        let semaphore = DispatchSemaphore(value: 0)
-
         Task { @MainActor in
-            result = delegate.purchase(productId: productId)
-            semaphore.signal()
+            _ = delegate?.purchase(productId: productId)
         }
-
-        // Don't actually wait - return immediately and handle via callbacks
         return BillingResult.Success()
     }
 
     func restorePurchases() -> BillingResult {
         Task { @MainActor in
-            _ = delegate.restorePurchases()
+            _ = delegate?.restorePurchases()
         }
         return BillingResult.Success()
     }

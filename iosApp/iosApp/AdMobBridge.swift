@@ -11,7 +11,7 @@ class AdMobBannerDelegate: IosAdBannerDelegate {
         onAdLoaded: @escaping () -> Void,
         onAdFailedToLoad: @escaping (String) -> Void
     ) -> UIView {
-        let bannerView = GADBannerView(adSize: GADAdSizeBanner)
+        let bannerView = BannerView(adSize: AdSizeBanner)
         bannerView.adUnitID = adUnitId
 
         // Get the root view controller
@@ -21,7 +21,7 @@ class AdMobBannerDelegate: IosAdBannerDelegate {
         }
 
         // Set up delegate to handle callbacks
-        let delegate = BannerViewDelegate(
+        let delegate = AdBannerViewDelegate(
             onAdLoaded: onAdLoaded,
             onAdFailedToLoad: onAdFailedToLoad
         )
@@ -36,14 +36,14 @@ class AdMobBannerDelegate: IosAdBannerDelegate {
         )
 
         // Load the ad
-        bannerView.load(GADRequest())
+        bannerView.load(Request())
 
         return bannerView
     }
 }
 
-/// Delegate class to handle GADBannerView callbacks
-private class BannerViewDelegate: NSObject, GADBannerViewDelegate {
+/// Delegate class to handle BannerView callbacks
+private class AdBannerViewDelegate: NSObject, BannerViewDelegate {
     let onAdLoaded: () -> Void
     let onAdFailedToLoad: (String) -> Void
 
@@ -52,11 +52,11 @@ private class BannerViewDelegate: NSObject, GADBannerViewDelegate {
         self.onAdFailedToLoad = onAdFailedToLoad
     }
 
-    func bannerViewDidReceiveAd(_ bannerView: GADBannerView) {
+    func bannerViewDidReceiveAd(_ bannerView: BannerView) {
         onAdLoaded()
     }
 
-    func bannerView(_ bannerView: GADBannerView, didFailToReceiveAdWithError error: Error) {
+    func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
         onAdFailedToLoad(error.localizedDescription)
     }
 }
@@ -64,6 +64,6 @@ private class BannerViewDelegate: NSObject, GADBannerViewDelegate {
 /// Helper to initialize AdMob SDK
 class AdMobInitializer {
     static func initialize() {
-        GADMobileAds.sharedInstance().start(completionHandler: nil)
+        MobileAds.shared.start(completionHandler: nil)
     }
 }

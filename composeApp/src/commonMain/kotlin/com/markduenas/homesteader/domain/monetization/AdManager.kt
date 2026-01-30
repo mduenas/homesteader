@@ -1,14 +1,15 @@
 package com.markduenas.homesteader.domain.monetization
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 
 /**
  * Platform-specific function to get the banner ad unit ID.
  */
 expect fun getPlatformBannerAdUnitId(): String
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+
 
 /**
  * Manages advertisement display logic.
