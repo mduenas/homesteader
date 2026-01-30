@@ -83,6 +83,9 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version = "33.7.0"
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
 
+# AdMob (Android)
+admob = { module = "com.google.android.gms:play-services-ads", version = "23.6.0" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }

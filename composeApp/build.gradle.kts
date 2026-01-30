@@ -127,6 +127,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+
+    // AdMob
+    implementation(libs.admob)
 }
 
 sqldelight {

@@ -6,6 +6,9 @@ target 'iosApp' do
   # Firebase
   pod 'FirebaseAnalytics'
   pod 'FirebaseCrashlytics'
+
+  # Google Mobile Ads (AdMob)
+  pod 'Google-Mobile-Ads-SDK'
 end
 
 post_install do |installer|

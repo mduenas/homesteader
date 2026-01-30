@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,9 +21,21 @@ import com.markduenas.homesteader.domain.monetization.AdManager
 val AdBannerHeight = 50.dp
 
 /**
+ * Platform-specific banner ad implementation.
+ * Android uses AdMob AdView, iOS uses GADBannerView.
+ */
+@Composable
+expect fun PlatformAdBanner(
+    adUnitId: String,
+    onAdLoaded: () -> Unit,
+    onAdFailedToLoad: (String) -> Unit,
+    modifier: Modifier
+)
+
+/**
  * Composable that displays a banner ad.
- * In production, this would render an actual AdMob banner.
- * For now, it shows a placeholder that respects premium status.
+ * Uses platform-specific implementation (AdMob on Android, Google Mobile Ads on iOS).
+ * Respects premium status - no ads shown for premium users.
  *
  * @param adManager The ad manager to check if ads should be shown
  * @param modifier Modifier for the ad banner container
@@ -37,13 +48,17 @@ fun AdBanner(
     val shouldShowAds by adManager.shouldShowAds.collectAsState(initial = false)
 
     if (shouldShowAds) {
-        AdBannerPlaceholder(modifier = modifier)
+        PlatformAdBanner(
+            adUnitId = adManager.getBannerAdUnitId(),
+            onAdLoaded = { adManager.onAdLoaded() },
+            onAdFailedToLoad = { error -> adManager.onAdFailedToLoad(error) },
+            modifier = modifier
+        )
     }
 }
 
 /**
- * Placeholder ad banner for development/testing.
- * In production, this would be replaced with actual AdMob banner view.
+ * Placeholder ad banner for development/testing when ads are not loaded.
  */
 @Composable
 fun AdBannerPlaceholder(

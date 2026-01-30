@@ -1,6 +1,7 @@
 package com.markduenas.homesteader.feature.main
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -20,30 +21,41 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import cafe.adriel.voyager.transitions.SlideTransition
+import com.markduenas.homesteader.core.designsystem.components.AdBanner
 import com.markduenas.homesteader.core.designsystem.icons.AnimalsIcon
 import com.markduenas.homesteader.core.designsystem.icons.CalendarIcon
 import com.markduenas.homesteader.core.designsystem.icons.DashboardIcon
 import com.markduenas.homesteader.core.designsystem.icons.MoreIcon
+import com.markduenas.homesteader.domain.monetization.AdManager
 import com.markduenas.homesteader.feature.animal.list.AnimalListScreen
 import com.markduenas.homesteader.feature.calendar.CalendarScreen
 import com.markduenas.homesteader.feature.dashboard.DashboardScreen
 import com.markduenas.homesteader.feature.more.MoreScreen
+import org.koin.compose.koinInject
 
 class MainScreen : Screen {
 
     @Composable
     override fun Content() {
+        val adManager: AdManager = koinInject()
+
         TabNavigator(
             tab = DashboardTab,
             tabDisposable = { TabDisposable(it, listOf(DashboardTab, AnimalsTab, CalendarTab, MoreTab)) }
         ) { tabNavigator ->
             Scaffold(
                 bottomBar = {
-                    NavigationBar {
-                        TabNavigationItem(DashboardTab)
-                        TabNavigationItem(AnimalsTab)
-                        TabNavigationItem(CalendarTab)
-                        TabNavigationItem(MoreTab)
+                    Column {
+                        // Ad banner above navigation
+                        AdBanner(adManager = adManager)
+
+                        // Bottom navigation
+                        NavigationBar {
+                            TabNavigationItem(DashboardTab)
+                            TabNavigationItem(AnimalsTab)
+                            TabNavigationItem(CalendarTab)
+                            TabNavigationItem(MoreTab)
+                        }
                     }
                 }
             ) { paddingValues ->

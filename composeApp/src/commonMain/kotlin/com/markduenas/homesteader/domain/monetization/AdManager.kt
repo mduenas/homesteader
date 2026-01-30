@@ -1,6 +1,11 @@
 package com.markduenas.homesteader.domain.monetization
 
 import kotlinx.coroutines.flow.MutableStateFlow
+
+/**
+ * Platform-specific function to get the banner ad unit ID.
+ */
+expect fun getPlatformBannerAdUnitId(): String
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -70,22 +75,16 @@ class AdManager(
 
     /**
      * Get the banner ad unit ID for the current platform.
-     * In production, these would be your actual AdMob ad unit IDs.
      */
-    fun getBannerAdUnitId(): String {
-        // TODO: Return actual ad unit IDs
-        // Use test IDs during development:
-        // Android test: "ca-app-pub-3940256099942544/6300978111"
-        // iOS test: "ca-app-pub-3940256099942544/2934735716"
-        return AD_UNIT_BANNER_TEST
-    }
+    fun getBannerAdUnitId(): String = getPlatformBannerAdUnitId()
 
     companion object {
-        // Test ad unit IDs from Google
-        const val AD_UNIT_BANNER_TEST = "ca-app-pub-3940256099942544/6300978111"
+        // Test ad unit IDs from Google (use for development)
+        const val AD_UNIT_BANNER_TEST_ANDROID = "ca-app-pub-3940256099942544/6300978111"
+        const val AD_UNIT_BANNER_TEST_IOS = "ca-app-pub-3940256099942544/2934735716"
 
-        // Production ad unit IDs (replace with actual IDs)
-        const val AD_UNIT_BANNER_ANDROID = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
-        const val AD_UNIT_BANNER_IOS = "ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX"
+        // Production ad unit IDs
+        const val AD_UNIT_BANNER_ANDROID = "ca-app-pub-7540731406850248/7070657722"
+        const val AD_UNIT_BANNER_IOS = "ca-app-pub-7540731406850248/4345595499"
     }
 }
