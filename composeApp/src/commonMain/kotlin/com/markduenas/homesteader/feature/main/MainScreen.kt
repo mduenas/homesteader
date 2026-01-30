@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -19,6 +20,10 @@ import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import cafe.adriel.voyager.transitions.SlideTransition
+import com.markduenas.homesteader.core.designsystem.icons.AnimalsIcon
+import com.markduenas.homesteader.core.designsystem.icons.CalendarIcon
+import com.markduenas.homesteader.core.designsystem.icons.DashboardIcon
+import com.markduenas.homesteader.core.designsystem.icons.MoreIcon
 import com.markduenas.homesteader.feature.animal.list.AnimalListScreen
 import com.markduenas.homesteader.feature.calendar.CalendarScreen
 import com.markduenas.homesteader.feature.dashboard.DashboardScreen
@@ -58,21 +63,22 @@ class MainScreen : Screen {
 private fun RowScope.TabNavigationItem(tab: Tab) {
     val tabNavigator = LocalTabNavigator.current
     val isSelected = tabNavigator.current.key == tab.key
+    val iconTint = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     NavigationBarItem(
         selected = isSelected,
         onClick = { tabNavigator.current = tab },
         icon = {
-            // Using text-based icons since material icons may not be available
-            Text(
-                text = when (tab) {
-                    is DashboardTab -> "H"
-                    is AnimalsTab -> "A"
-                    is CalendarTab -> "C"
-                    is MoreTab -> "M"
-                    else -> ""
-                }
-            )
+            when (tab) {
+                is DashboardTab -> DashboardIcon(tint = iconTint)
+                is AnimalsTab -> AnimalsIcon(tint = iconTint)
+                is CalendarTab -> CalendarIcon(tint = iconTint)
+                is MoreTab -> MoreIcon(tint = iconTint)
+            }
         },
         label = { Text(text = tab.options.title) }
     )
