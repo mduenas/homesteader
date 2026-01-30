@@ -25,6 +25,11 @@ class AdManager(
     val adError: StateFlow<String?> = _adError.asStateFlow()
 
     /**
+     * Whether user has premium status (no ads).
+     */
+    val isPremium: StateFlow<Boolean> = premiumManager.isPremium
+
+    /**
      * Whether ads should be shown.
      * Returns false if user has premium status.
      */

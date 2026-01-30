@@ -45,9 +45,10 @@ fun AdBanner(
     adManager: AdManager,
     modifier: Modifier = Modifier
 ) {
-    val shouldShowAds by adManager.shouldShowAds.collectAsState(initial = false)
+    val isPremium by adManager.isPremium.collectAsState()
 
-    if (shouldShowAds) {
+    // Show ads if user is not premium
+    if (!isPremium) {
         PlatformAdBanner(
             adUnitId = adManager.getBannerAdUnitId(),
             onAdLoaded = { adManager.onAdLoaded() },

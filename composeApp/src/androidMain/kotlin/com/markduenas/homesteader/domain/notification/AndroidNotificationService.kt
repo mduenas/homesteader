@@ -248,7 +248,7 @@ class ReminderNotificationWorker(
         )
 
         val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
