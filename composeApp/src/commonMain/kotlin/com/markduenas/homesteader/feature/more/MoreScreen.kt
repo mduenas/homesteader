@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.markduenas.homesteader.core.util.AppUrls
+import com.markduenas.homesteader.core.util.openUrl
 import com.markduenas.homesteader.feature.backup.BackupScreen
 import com.markduenas.homesteader.feature.premium.PremiumScreen
 import com.markduenas.homesteader.feature.reports.ReportsScreen
@@ -43,7 +45,8 @@ class MoreScreen : Screen {
             onNavigateToSettings = { navigator.push(SettingsScreen()) },
             onNavigateToBackup = { navigator.push(BackupScreen()) },
             onNavigateToAbout = { /* TODO: Implement about */ },
-            onNavigateToPremium = { navigator.push(PremiumScreen()) }
+            onNavigateToPremium = { navigator.push(PremiumScreen()) },
+            onOpenPrivacyPolicy = { openUrl(AppUrls.PRIVACY_POLICY) }
         )
     }
 }
@@ -55,7 +58,8 @@ private fun MoreContent(
     onNavigateToSettings: () -> Unit,
     onNavigateToBackup: () -> Unit,
     onNavigateToAbout: () -> Unit,
-    onNavigateToPremium: () -> Unit
+    onNavigateToPremium: () -> Unit,
+    onOpenPrivacyPolicy: () -> Unit
 ) {
     Scaffold { paddingValues ->
         LazyColumn(
@@ -126,6 +130,15 @@ private fun MoreContent(
                     title = "About Homesteader",
                     subtitle = "Version info and support",
                     onClick = onNavigateToAbout
+                )
+            }
+
+            item {
+                MoreMenuItem(
+                    icon = "P",
+                    title = "Privacy Policy",
+                    subtitle = "How we handle your data",
+                    onClick = onOpenPrivacyPolicy
                 )
             }
 
