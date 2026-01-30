@@ -21,6 +21,9 @@ struct iOSApp: App {
         // Set up AdMob delegate for Kotlin bridge
         IosAdBannerProvider.shared.setDelegate(delegate: AdMobBannerDelegate())
 
+        // Set up StoreKit delegate for Kotlin bridge
+        IosStoreKitProvider.shared.setDelegate(delegate: StoreKitDelegateWrapper())
+
         // Initialize Koin
         KoinHelperKt.doInitKoin()
     }

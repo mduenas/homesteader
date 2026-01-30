@@ -1,92 +1,97 @@
 package com.markduenas.homesteader.domain.monetization
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * Manages premium subscription state.
- * In a real implementation, this would be backed by platform-specific
- * billing APIs (Google Play Billing, StoreKit).
+ * Delegates to platform-specific BillingService for actual purchases.
  */
-class PremiumManager {
-    private val _isPremium = MutableStateFlow(false)
-    val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+class PremiumManager(
+    private val billingService: BillingService
+) {
+    private val scope = CoroutineScope(Dispatchers.Main)
+
+    val isPremium: StateFlow<Boolean> = billingService.isPremiumPurchased
 
     private val _purchaseState = MutableStateFlow<PurchaseState>(PurchaseState.Idle)
     val purchaseState: StateFlow<PurchaseState> = _purchaseState.asStateFlow()
 
+    val isReady: StateFlow<Boolean> = billingService.isReady
+
+    val productInfo: StateFlow<ProductInfo?> = billingService.productDetails
+
     /**
-     * Check if user has premium status.
-     * In production, this would verify with the billing service.
+     * Initialize billing and check for existing purchases.
      */
-    suspend fun checkPremiumStatus(): Boolean {
-        // TODO: Implement actual premium check with billing service
-        // For now, return the cached value
-        return _isPremium.value
+    fun initialize() {
+        scope.launch {
+            billingService.initialize()
+            billingService.queryProducts()
+        }
     }
 
     /**
      * Initiate premium purchase.
-     * In production, this would launch the platform billing flow.
      */
     suspend fun purchasePremium(): PurchaseResult {
         _purchaseState.value = PurchaseState.Processing
 
-        // TODO: Implement actual purchase flow
-        // This is a placeholder that simulates the purchase flow
-        return try {
-            // In real implementation:
-            // - Android: Use Google Play Billing Library
-            // - iOS: Use StoreKit
-            _purchaseState.value = PurchaseState.Idle
-            PurchaseResult.NotImplemented
-        } catch (e: Exception) {
-            _purchaseState.value = PurchaseState.Error(e.message ?: "Unknown error")
-            PurchaseResult.Error(e.message ?: "Unknown error")
+        val result = billingService.purchasePremium()
+
+        _purchaseState.value = PurchaseState.Idle
+
+        return when (result) {
+            is BillingResult.Success -> PurchaseResult.Success
+            is BillingResult.Cancelled -> PurchaseResult.Cancelled
+            is BillingResult.AlreadyOwned -> PurchaseResult.AlreadyOwned
+            is BillingResult.NotAvailable -> PurchaseResult.Error("Product not available")
+            is BillingResult.NetworkError -> PurchaseResult.Error("Network error. Please try again.")
+            is BillingResult.Error -> PurchaseResult.Error(result.message)
         }
     }
 
     /**
      * Restore previous purchases.
-     * Called when user reinstalls or switches devices.
      */
     suspend fun restorePurchases(): RestoreResult {
         _purchaseState.value = PurchaseState.Restoring
 
-        // TODO: Implement actual restore with billing service
-        return try {
-            _purchaseState.value = PurchaseState.Idle
-            RestoreResult.NotImplemented
-        } catch (e: Exception) {
-            _purchaseState.value = PurchaseState.Error(e.message ?: "Unknown error")
-            RestoreResult.Error(e.message ?: "Unknown error")
-        }
-    }
+        val result = billingService.restorePurchases()
 
-    /**
-     * Called when premium is successfully purchased or restored.
-     * Updates the local state.
-     */
-    fun setPremiumStatus(isPremium: Boolean) {
-        _isPremium.value = isPremium
+        _purchaseState.value = PurchaseState.Idle
+
+        return when (result) {
+            is BillingResult.Success -> RestoreResult.Success(premiumRestored = true)
+            is BillingResult.NotAvailable -> RestoreResult.NothingToRestore
+            is BillingResult.Error -> RestoreResult.Error(result.message)
+            else -> RestoreResult.NothingToRestore
+        }
     }
 
     /**
      * Get premium product info for display.
      */
     fun getPremiumProductInfo(): PremiumProduct {
+        val info = productInfo.value
         return PremiumProduct(
-            productId = PREMIUM_PRODUCT_ID,
-            title = "Remove Ads",
-            description = "Remove all advertisements with a one-time purchase",
-            price = "$4.99", // This would come from the billing service in production
+            productId = info?.productId ?: PREMIUM_PRODUCT_ID,
+            title = info?.title ?: "Remove Ads",
+            description = info?.description ?: "Remove all advertisements with a one-time purchase",
+            price = info?.formattedPrice ?: "$4.99",
             currencyCode = "USD"
         )
     }
 
-    companion object {
-        const val PREMIUM_PRODUCT_ID = "homesteader_remove_ads"
+    /**
+     * Clean up resources.
+     */
+    fun cleanup() {
+        billingService.cleanup()
     }
 }
 
@@ -118,7 +123,6 @@ sealed class PurchaseResult {
     data object Success : PurchaseResult()
     data object Cancelled : PurchaseResult()
     data object AlreadyOwned : PurchaseResult()
-    data object NotImplemented : PurchaseResult()
     data class Error(val message: String) : PurchaseResult()
 }
 
@@ -128,6 +132,5 @@ sealed class PurchaseResult {
 sealed class RestoreResult {
     data class Success(val premiumRestored: Boolean) : RestoreResult()
     data object NothingToRestore : RestoreResult()
-    data object NotImplemented : RestoreResult()
     data class Error(val message: String) : RestoreResult()
 }

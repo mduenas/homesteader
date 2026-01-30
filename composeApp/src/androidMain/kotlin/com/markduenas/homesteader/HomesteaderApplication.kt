@@ -6,6 +6,7 @@ import com.markduenas.homesteader.app.di.androidAnalyticsModule
 import com.markduenas.homesteader.app.di.coreModules
 import com.markduenas.homesteader.data.database.DatabaseDriverFactory
 import com.markduenas.homesteader.domain.monetization.AdManager
+import com.markduenas.homesteader.domain.monetization.PremiumManager
 import org.koin.android.ext.android.inject
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
@@ -35,5 +36,9 @@ class HomesteaderApplication : Application() {
         // Initialize AdManager after Koin is ready
         val adManager: AdManager by inject()
         adManager.initialize()
+
+        // Initialize PremiumManager (billing)
+        val premiumManager: PremiumManager by inject()
+        premiumManager.initialize()
     }
 }

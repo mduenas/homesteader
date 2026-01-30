@@ -130,6 +130,9 @@ dependencies {
 
     // AdMob
     implementation(libs.admob)
+
+    // Google Play Billing
+    implementation(libs.play.billing)
 }
 
 sqldelight {

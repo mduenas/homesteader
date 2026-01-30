@@ -86,6 +86,9 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx"
 # AdMob (Android)
 admob = { module = "com.google.android.gms:play-services-ads", version = "23.6.0" }
 
+# Google Play Billing (Android)
+play-billing = { module = "com.android.billingclient:billing-ktx", version = "7.1.1" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }

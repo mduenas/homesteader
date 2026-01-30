@@ -81,11 +81,8 @@ class PremiumViewModel(
                     // User cancelled, no message needed
                 }
                 PurchaseResult.AlreadyOwned -> {
-                    premiumManager.setPremiumStatus(true)
                     _effects.send(PremiumEffect.ShowMessage("You already own premium!"))
-                }
-                PurchaseResult.NotImplemented -> {
-                    _error.value = "In-app purchases will be available in the full release"
+                    _effects.send(PremiumEffect.PurchaseSuccess)
                 }
                 is PurchaseResult.Error -> {
                     _error.value = result.message
@@ -107,9 +104,6 @@ class PremiumViewModel(
                 }
                 RestoreResult.NothingToRestore -> {
                     _effects.send(PremiumEffect.ShowMessage("No purchases to restore"))
-                }
-                RestoreResult.NotImplemented -> {
-                    _error.value = "Restore will be available in the full release"
                 }
                 is RestoreResult.Error -> {
                     _error.value = result.message

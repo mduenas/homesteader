@@ -7,23 +7,29 @@ import com.markduenas.homesteader.core.analytics.CrashReporter
 import com.markduenas.homesteader.core.analytics.CrashReportingService
 import com.markduenas.homesteader.core.analytics.IosAnalyticsService
 import com.markduenas.homesteader.core.analytics.IosCrashReportingService
+import com.markduenas.homesteader.domain.monetization.BillingService
+import com.markduenas.homesteader.domain.monetization.IosBillingService
 import org.koin.dsl.module
 
 /**
- * iOS-specific analytics module.
+ * iOS-specific module for analytics and billing.
  *
- * By default, uses debug implementations that log to console.
- * To enable Firebase, call the following from Swift before starting Koin:
+ * Firebase delegates should be set from Swift before starting Koin:
  *
  * ```swift
- * IosAnalyticsServiceCompanion.shared.setDelegate(YourFirebaseAnalyticsDelegate())
- * IosCrashReportingServiceCompanion.shared.setDelegate(YourFirebaseCrashlyticsDelegate())
+ * IosAnalyticsService.Companion.shared.setDelegate(analyticsService: FirebaseAnalyticsDelegate())
+ * IosCrashReportingService.Companion.shared.setDelegate(crashReportingService: FirebaseCrashlyticsDelegate())
+ * IosStoreKitProvider.shared.setDelegate(delegate: StoreKitDelegateWrapper())
  * ```
  */
 val iosAnalyticsModule = module {
+    // Analytics
     single<AnalyticsService> { IosAnalyticsService() }
     single<CrashReportingService> { IosCrashReportingService() }
     single { AppInsights(get(), get()) }
+
+    // Billing
+    single<BillingService> { IosBillingService() }
 
     single {
         val analytics: AnalyticsService = get()

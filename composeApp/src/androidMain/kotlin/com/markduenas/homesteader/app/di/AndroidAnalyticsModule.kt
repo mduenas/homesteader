@@ -7,16 +7,21 @@ import com.markduenas.homesteader.core.analytics.CrashReporter
 import com.markduenas.homesteader.core.analytics.CrashReportingService
 import com.markduenas.homesteader.core.analytics.FirebaseAnalyticsService
 import com.markduenas.homesteader.core.analytics.FirebaseCrashReportingService
+import com.markduenas.homesteader.domain.monetization.BillingService
+import com.markduenas.homesteader.domain.monetization.GooglePlayBillingService
 import org.koin.dsl.module
 
 /**
- * Android-specific analytics module that provides Firebase implementations.
- * This module overrides the default debug implementations from commonMain.
+ * Android-specific module that provides Firebase and billing implementations.
  */
 val androidAnalyticsModule = module {
+    // Analytics
     single<AnalyticsService> { FirebaseAnalyticsService() }
     single<CrashReportingService> { FirebaseCrashReportingService() }
     single { AppInsights(get(), get()) }
+
+    // Billing
+    single<BillingService> { GooglePlayBillingService(get()) }
 
     single {
         val analytics: AnalyticsService = get()

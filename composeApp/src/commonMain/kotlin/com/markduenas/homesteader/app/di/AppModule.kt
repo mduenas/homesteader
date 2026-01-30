@@ -72,7 +72,8 @@ val serviceModule = module {
     single { ReportGenerator(get(), get()) }
     single { BackupService(get(), get(), get(), get()) }
     single { CsvImportService(get()) }
-    single { PremiumManager() }
+    // PremiumManager requires BillingService which is provided by platform modules
+    single { PremiumManager(get()) }
     single { AdManager(get()) }
 }
 
