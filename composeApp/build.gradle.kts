@@ -133,6 +133,9 @@ dependencies {
 
     // Google Play Billing
     implementation(libs.play.billing)
+
+    // WorkManager for notifications
+    implementation(libs.androidx.work)
 }
 
 sqldelight {

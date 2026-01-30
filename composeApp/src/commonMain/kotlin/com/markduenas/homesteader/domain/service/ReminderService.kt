@@ -11,6 +11,7 @@ import com.markduenas.homesteader.domain.model.Reminder
 import com.markduenas.homesteader.domain.model.ReminderCalculator
 import com.markduenas.homesteader.domain.model.ReminderData
 import com.markduenas.homesteader.domain.model.ReminderType
+import com.markduenas.homesteader.domain.notification.NotificationService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DatePeriod
@@ -19,7 +20,8 @@ import kotlinx.datetime.plus
 
 class ReminderService(
     private val reminderRepository: ReminderRepository,
-    private val speciesConfigRepository: SpeciesConfigRepository
+    private val speciesConfigRepository: SpeciesConfigRepository,
+    private val notificationService: NotificationService? = null
 ) {
 
     /**
@@ -276,5 +278,43 @@ class ReminderService(
     suspend fun cleanupOldReminders(daysOld: Int = 30) {
         val cutoffDate = DateTimeUtil.today().plus(DatePeriod(days = -daysOld))
         reminderRepository.deleteCompletedOlderThan(cutoffDate)
+    }
+
+    /**
+     * Schedule notifications for all pending reminders.
+     * Should be called on app startup.
+     */
+    suspend fun scheduleAllNotifications() {
+        val pendingReminders = reminderRepository.getPendingReminders().first()
+        notificationService?.rescheduleAllReminders(pendingReminders)
+    }
+
+    /**
+     * Schedule a notification for a specific reminder.
+     */
+    private suspend fun scheduleNotification(reminder: Reminder) {
+        notificationService?.scheduleNotification(reminder)
+    }
+
+    /**
+     * Cancel notification for a specific reminder.
+     */
+    private suspend fun cancelNotification(reminderId: String) {
+        notificationService?.cancelNotification(reminderId)
+    }
+
+    /**
+     * Request notification permissions.
+     * @return true if permissions were granted
+     */
+    suspend fun requestNotificationPermission(): Boolean {
+        return notificationService?.requestPermission() ?: false
+    }
+
+    /**
+     * Check if notification permissions are granted.
+     */
+    fun hasNotificationPermission(): Boolean {
+        return notificationService?.hasPermission?.value ?: false
     }
 }

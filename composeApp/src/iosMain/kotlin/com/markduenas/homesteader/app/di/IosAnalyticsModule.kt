@@ -9,6 +9,8 @@ import com.markduenas.homesteader.core.analytics.IosAnalyticsService
 import com.markduenas.homesteader.core.analytics.IosCrashReportingService
 import com.markduenas.homesteader.domain.monetization.BillingService
 import com.markduenas.homesteader.domain.monetization.IosBillingService
+import com.markduenas.homesteader.domain.notification.IosNotificationService
+import com.markduenas.homesteader.domain.notification.NotificationService
 import org.koin.dsl.module
 
 /**
@@ -30,6 +32,9 @@ val iosAnalyticsModule = module {
 
     // Billing
     single<BillingService> { IosBillingService() }
+
+    // Notifications
+    single<NotificationService> { IosNotificationService() }
 
     single {
         val analytics: AnalyticsService = get()

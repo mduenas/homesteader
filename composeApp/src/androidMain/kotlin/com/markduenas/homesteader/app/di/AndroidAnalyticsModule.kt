@@ -9,6 +9,8 @@ import com.markduenas.homesteader.core.analytics.FirebaseAnalyticsService
 import com.markduenas.homesteader.core.analytics.FirebaseCrashReportingService
 import com.markduenas.homesteader.domain.monetization.BillingService
 import com.markduenas.homesteader.domain.monetization.GooglePlayBillingService
+import com.markduenas.homesteader.domain.notification.AndroidNotificationService
+import com.markduenas.homesteader.domain.notification.NotificationService
 import org.koin.dsl.module
 
 /**
@@ -22,6 +24,9 @@ val androidAnalyticsModule = module {
 
     // Billing
     single<BillingService> { GooglePlayBillingService(get()) }
+
+    // Notifications
+    single<NotificationService> { AndroidNotificationService(get()) }
 
     single {
         val analytics: AnalyticsService = get()

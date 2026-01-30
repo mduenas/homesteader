@@ -15,6 +15,7 @@ import com.markduenas.homesteader.data.repository.ReminderRepository
 import com.markduenas.homesteader.data.repository.SpeciesConfigRepository
 import com.markduenas.homesteader.domain.monetization.AdManager
 import com.markduenas.homesteader.domain.monetization.PremiumManager
+import com.markduenas.homesteader.domain.notification.NotificationService
 import com.markduenas.homesteader.domain.service.BackupService
 import com.markduenas.homesteader.domain.service.CsvImportService
 import com.markduenas.homesteader.domain.service.ReminderService
@@ -68,7 +69,7 @@ val repositoryModule = module {
 }
 
 val serviceModule = module {
-    single { ReminderService(get(), get()) }
+    single { ReminderService(get(), get(), getOrNull<NotificationService>()) }
     single { ReportGenerator(get(), get()) }
     single { BackupService(get(), get(), get(), get()) }
     single { CsvImportService(get()) }
