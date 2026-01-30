@@ -11,8 +11,8 @@ struct iOSApp: App {
         FirebaseApp.configure()
 
         // Set up Firebase delegates for Kotlin bridge
-        IosAnalyticsService.Companion.shared.setDelegate(delegate: FirebaseAnalyticsDelegate())
-        IosCrashReportingService.Companion.shared.setDelegate(delegate: FirebaseCrashlyticsDelegate())
+        IosAnalyticsService.Companion.shared.setDelegate(analyticsService: FirebaseAnalyticsDelegate())
+        IosCrashReportingService.Companion.shared.setDelegate(crashReportingService: FirebaseCrashlyticsDelegate())
 
         // Initialize Koin
         KoinHelperKt.doInitKoin()
