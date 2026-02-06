@@ -21,3 +21,9 @@ node_modules/
 # CocoaPods
 iosApp/Pods/
 iosApp/.symlinks/
+
+# Firebase/Google Services config files (contain API keys)
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
