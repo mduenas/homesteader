@@ -2,8 +2,12 @@ package com.markduenas.homesteader.core.designsystem.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +40,7 @@ expect fun PlatformAdBanner(
  * Composable that displays a banner ad.
  * Uses platform-specific implementation (AdMob on Android, Google Mobile Ads on iOS).
  * Respects premium status - no ads shown for premium users.
+ * Includes safe area padding for status bar when displayed.
  *
  * @param adManager The ad manager to check if ads should be shown
  * @param modifier Modifier for the ad banner container
@@ -47,14 +52,20 @@ fun AdBanner(
 ) {
     val isPremium by adManager.isPremium.collectAsState()
 
-    // Show ads if user is not premium
+    // Show ads if user is not premium (includes safe area padding)
     if (!isPremium) {
-        PlatformAdBanner(
-            adUnitId = adManager.getBannerAdUnitId(),
-            onAdLoaded = { adManager.onAdLoaded() },
-            onAdFailedToLoad = { error -> adManager.onAdFailedToLoad(error) },
+        Column(
             modifier = modifier
-        )
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+        ) {
+            PlatformAdBanner(
+                adUnitId = adManager.getBannerAdUnitId(),
+                onAdLoaded = { adManager.onAdLoaded() },
+                onAdFailedToLoad = { error -> adManager.onAdFailedToLoad(error) },
+                modifier = Modifier
+            )
+        }
     }
 }
 
