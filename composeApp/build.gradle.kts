@@ -1,4 +1,13 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+// Load local.properties
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(localPropertiesFile.inputStream())
+    }
+}
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -101,18 +110,18 @@ android {
         applicationId = "com.markduenas.homesteader"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     signingConfigs {
         create("release") {
-            val keystoreFile = project.findProperty("KEYSTORE_FILE")?.toString()
-            if (keystoreFile != null && file(keystoreFile).exists()) {
-                storeFile = file(keystoreFile)
-                storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString()
-                keyAlias = project.findProperty("KEY_ALIAS")?.toString()
-                keyPassword = project.findProperty("KEY_PASSWORD")?.toString()
+            val keystoreFilePath = localProperties.getProperty("KEYSTORE_FILE")
+            if (keystoreFilePath != null && file(keystoreFilePath).exists()) {
+                storeFile = file(keystoreFilePath)
+                storePassword = localProperties.getProperty("KEYSTORE_PASSWORD")
+                keyAlias = localProperties.getProperty("KEY_ALIAS")
+                keyPassword = localProperties.getProperty("KEY_PASSWORD")
             }
         }
     }
