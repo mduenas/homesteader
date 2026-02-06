@@ -25,6 +25,8 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 data class EventAddState(
+    val isEditing: Boolean = false,
+    val eventId: String? = null,
     val animalId: String = "",
     val animalName: String = "",
     val selectedCategory: EventCategory = EventCategory.HEALTH,
@@ -95,6 +97,7 @@ sealed class EventAddIntent {
     data class UpdateBodyCondition(val condition: String) : EventAddIntent()
 
     data object Save : EventAddIntent()
+    data object DeleteEvent : EventAddIntent()
 }
 
 sealed class EventAddEffect {
@@ -105,6 +108,7 @@ sealed class EventAddEffect {
 class EventAddViewModel(
     private val animalId: String,
     private val animalName: String,
+    private val eventId: String?,
     private val eventRepository: EventRepository,
     private val animalRepository: AnimalRepository,
     private val reminderService: ReminderService
@@ -112,6 +116,8 @@ class EventAddViewModel(
 
     private val _state = MutableStateFlow(
         EventAddState(
+            isEditing = eventId != null,
+            eventId = eventId,
             animalId = animalId,
             animalName = animalName,
             eventDate = DateTimeUtil.today().toString()
@@ -121,6 +127,12 @@ class EventAddViewModel(
 
     private val _effects = Channel<EventAddEffect>()
     val effects = _effects.receiveAsFlow()
+
+    init {
+        if (eventId != null) {
+            loadEvent(eventId)
+        }
+    }
 
     fun handleIntent(intent: EventAddIntent) {
         when (intent) {
@@ -156,6 +168,7 @@ class EventAddViewModel(
             is EventAddIntent.UpdateBodyCondition -> updateField { copy(bodyCondition = intent.condition) }
 
             EventAddIntent.Save -> saveEvent()
+            EventAddIntent.DeleteEvent -> deleteEvent()
         }
     }
 
@@ -170,6 +183,76 @@ class EventAddViewModel(
 
     private fun updateField(update: EventAddState.() -> EventAddState) {
         _state.update { it.update() }
+    }
+
+    private fun loadEvent(id: String) {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val event = eventRepository.getEventById(id).first()
+                if (event != null) {
+                    _state.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            selectedCategory = event.eventType.category,
+                            selectedEventType = event.eventType,
+                            eventDate = event.eventDate.toString(),
+                            notes = event.notes ?: ""
+                        ).populateFromEventData(event.eventData)
+                    }
+                } else {
+                    _state.update { it.copy(isLoading = false, error = "Event not found") }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    private fun EventAddState.populateFromEventData(data: EventData?): EventAddState {
+        return when (data) {
+            is HealthEventData -> this.copy(
+                medicationName = data.medicationName ?: "",
+                dosage = data.dosage ?: "",
+                veterinarian = data.veterinarian ?: "",
+                diagnosis = data.diagnosis ?: ""
+            )
+            is BreedingEventData -> this.copy(
+                sireId = data.sireId ?: "",
+                sireName = data.sireName ?: "",
+                breedingMethod = data.breedingMethod ?: "Natural",
+                isPregnant = data.isConfirmedPregnant,
+                expectedDueDate = data.expectedDueDate ?: "",
+                offspringCount = data.offspringCount?.toString() ?: ""
+            )
+            is ProductionEventData -> this.copy(
+                milkQuantity = data.milkQuantity?.toString() ?: "",
+                milkUnit = data.milkUnit ?: "gallons",
+                eggCount = data.eggCount?.toString() ?: "",
+                fiberWeight = data.fiberWeight?.toString() ?: ""
+            )
+            is WeightEventData -> this.copy(
+                weight = data.weight.toString(),
+                weightUnit = data.weightUnit,
+                bodyCondition = data.condition ?: ""
+            )
+            else -> this
+        }
+    }
+
+    private fun deleteEvent() {
+        val currentEventId = _state.value.eventId ?: return
+
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                eventRepository.deleteEvent(currentEventId)
+                _effects.send(EventAddEffect.NavigateBack)
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = "Failed to delete: ${e.message}") }
+                _effects.send(EventAddEffect.ShowError("Failed to delete event"))
+            }
+        }
     }
 
     private fun saveEvent() {
@@ -191,6 +274,7 @@ class EventAddViewModel(
             try {
                 val eventData = buildEventData(currentState)
                 val event = AnimalEvent(
+                    id = currentState.eventId ?: "",
                     animalId = currentState.animalId,
                     eventType = currentState.selectedEventType,
                     eventDate = eventDate,
@@ -198,10 +282,13 @@ class EventAddViewModel(
                     eventData = eventData
                 )
 
-                val eventId = eventRepository.insertEvent(event)
-
-                // Generate automatic reminders based on event type
-                generateReminders(event.copy(id = eventId), currentState)
+                if (currentState.isEditing) {
+                    eventRepository.updateEvent(event)
+                } else {
+                    val newEventId = eventRepository.insertEvent(event)
+                    // Generate automatic reminders only for new events
+                    generateReminders(event.copy(id = newEventId), currentState)
+                }
 
                 _effects.send(EventAddEffect.NavigateBack)
             } catch (e: Exception) {

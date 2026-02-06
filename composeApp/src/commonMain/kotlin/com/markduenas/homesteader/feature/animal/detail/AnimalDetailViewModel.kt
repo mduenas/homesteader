@@ -31,6 +31,7 @@ sealed interface AnimalDetailIntent : UiIntent {
     data object EditAnimal : AnimalDetailIntent
     data object DeleteAnimal : AnimalDetailIntent
     data object AddEvent : AnimalDetailIntent
+    data class EditEvent(val eventId: String) : AnimalDetailIntent
     data object Refresh : AnimalDetailIntent
 }
 
@@ -38,6 +39,7 @@ sealed interface AnimalDetailEffect : UiEffect {
     data object NavigateBack : AnimalDetailEffect
     data class NavigateToEdit(val animalId: String) : AnimalDetailEffect
     data class NavigateToAddEvent(val animalId: String, val animalName: String) : AnimalDetailEffect
+    data class NavigateToEditEvent(val eventId: String, val animalId: String, val animalName: String) : AnimalDetailEffect
 }
 
 class AnimalDetailViewModel(
@@ -61,6 +63,7 @@ class AnimalDetailViewModel(
             is AnimalDetailIntent.EditAnimal -> editAnimal()
             is AnimalDetailIntent.DeleteAnimal -> deleteAnimal()
             is AnimalDetailIntent.AddEvent -> addEvent()
+            is AnimalDetailIntent.EditEvent -> editEvent(intent.eventId)
             is AnimalDetailIntent.Refresh -> loadAnimalAndEvents()
         }
     }
@@ -101,6 +104,15 @@ class AnimalDetailViewModel(
             val animal = _state.value.animal
             if (animal != null) {
                 _effects.send(AnimalDetailEffect.NavigateToAddEvent(animalId, animal.displayName))
+            }
+        }
+    }
+
+    private fun editEvent(eventId: String) {
+        screenModelScope.launch {
+            val animal = _state.value.animal
+            if (animal != null) {
+                _effects.send(AnimalDetailEffect.NavigateToEditEvent(eventId, animalId, animal.displayName))
             }
         }
     }

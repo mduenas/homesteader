@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -50,14 +51,16 @@ import org.koin.core.parameter.parametersOf
 
 data class EventAddScreen(
     val animalId: String,
-    val animalName: String
+    val animalName: String,
+    val eventId: String? = null
 ) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = koinScreenModel<EventAddViewModel> { parametersOf(animalId, animalName) }
+        val viewModel = koinScreenModel<EventAddViewModel> { parametersOf(animalId, animalName, eventId) }
         val state by viewModel.state.collectAsState()
+        var showDeleteDialog by remember { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             viewModel.effects.collect { effect ->
@@ -70,10 +73,21 @@ data class EventAddScreen(
             }
         }
 
+        if (showDeleteDialog) {
+            DeleteEventDialog(
+                onConfirm = {
+                    showDeleteDialog = false
+                    viewModel.handleIntent(EventAddIntent.DeleteEvent)
+                },
+                onDismiss = { showDeleteDialog = false }
+            )
+        }
+
         EventAddContent(
             state = state,
             onIntent = viewModel::handleIntent,
-            onBackClick = { navigator.pop() }
+            onBackClick = { navigator.pop() },
+            onDeleteClick = { showDeleteDialog = true }
         )
     }
 }
@@ -83,15 +97,23 @@ data class EventAddScreen(
 private fun EventAddContent(
     state: EventAddState,
     onIntent: (EventAddIntent) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Event") },
+                title = { Text(if (state.isEditing) "Edit Event" else "Add Event") },
                 navigationIcon = {
                     TextButton(onClick = onBackClick) {
                         Text("Cancel")
+                    }
+                },
+                actions = {
+                    if (state.isEditing) {
+                        TextButton(onClick = onDeleteClick) {
+                            Text("Delete", color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -511,5 +533,27 @@ private fun WeightEventFields(
         modifier = Modifier.fillMaxWidth(),
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+    )
+}
+
+@Composable
+private fun DeleteEventDialog(
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Event") },
+        text = { Text("Are you sure you want to delete this event? This action cannot be undone.") },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Delete", color = MaterialTheme.colorScheme.error)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
     )
 }

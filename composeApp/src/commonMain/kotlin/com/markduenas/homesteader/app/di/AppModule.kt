@@ -82,7 +82,7 @@ val viewModelModule = module {
     factory { AnimalListViewModel(get()) }
     factory { (animalId: String) -> AnimalDetailViewModel(animalId, get(), get()) }
     factory { (animalId: String?) -> AnimalEditViewModel(animalId, get()) }
-    factory { (animalId: String, animalName: String) -> EventAddViewModel(animalId, animalName, get(), get(), get()) }
+    factory { (animalId: String, animalName: String, eventId: String?) -> EventAddViewModel(animalId, animalName, eventId, get(), get(), get()) }
     factory { SpeciesSetupViewModel(get()) }
     factory { DashboardViewModel(get(), get(), get()) }
     factory { CalendarViewModel(get(), get(), get()) }

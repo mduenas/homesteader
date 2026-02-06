@@ -1,5 +1,6 @@
 package com.markduenas.homesteader.feature.animal.detail
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -66,6 +68,9 @@ data class AnimalDetailScreen(val animalId: String) : Screen {
                     }
                     is AnimalDetailEffect.NavigateToAddEvent -> {
                         navigator.push(EventAddScreen(effect.animalId, effect.animalName))
+                    }
+                    is AnimalDetailEffect.NavigateToEditEvent -> {
+                        navigator.push(EventAddScreen(effect.animalId, effect.animalName, effect.eventId))
                     }
                 }
             }
@@ -147,7 +152,8 @@ private fun AnimalDetailContent(
                 state.isLoading -> LoadingIndicator()
                 state.animal != null -> AnimalDetailBody(
                     animal = state.animal,
-                    events = state.events
+                    events = state.events,
+                    onEventClick = { event -> onIntent(AnimalDetailIntent.EditEvent(event.id)) }
                 )
                 state.error != null -> {
                     Text(
@@ -165,6 +171,7 @@ private fun AnimalDetailContent(
 private fun AnimalDetailBody(
     animal: Animal,
     events: List<AnimalEvent>,
+    onEventClick: (AnimalEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -265,7 +272,7 @@ private fun AnimalDetailBody(
         }
 
         // Events Timeline
-        EventsTimeline(events = events)
+        EventsTimeline(events = events, onEventClick = onEventClick)
 
         Spacer(modifier = Modifier.height(80.dp)) // Space for FAB
     }
@@ -274,6 +281,7 @@ private fun AnimalDetailBody(
 @Composable
 private fun EventsTimeline(
     events: List<AnimalEvent>,
+    onEventClick: (AnimalEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
     DetailCard(title = "Event History (${events.size})", modifier = modifier) {
@@ -285,7 +293,10 @@ private fun EventsTimeline(
             )
         } else {
             events.forEach { event ->
-                EventTimelineItem(event = event)
+                EventTimelineItem(
+                    event = event,
+                    onClick = { onEventClick(event) }
+                )
                 if (event != events.last()) {
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -297,48 +308,62 @@ private fun EventsTimeline(
 @Composable
 private fun EventTimelineItem(
     event: AnimalEvent,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(8.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
     ) {
-        // Category indicator
-        Surface(
-            modifier = Modifier.size(8.dp),
-            shape = CircleShape,
-            color = when (event.eventType.category) {
-                EventCategory.HEALTH -> MaterialTheme.colorScheme.error
-                EventCategory.BREEDING -> MaterialTheme.colorScheme.tertiary
-                EventCategory.PRODUCTION -> MaterialTheme.colorScheme.secondary
-                EventCategory.WEIGHT -> MaterialTheme.colorScheme.primary
-                else -> MaterialTheme.colorScheme.outline
-            }
-        ) {}
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            // Category indicator
+            Surface(
+                modifier = Modifier
+                    .size(8.dp)
+                    .padding(top = 6.dp),
+                shape = CircleShape,
+                color = when (event.eventType.category) {
+                    EventCategory.HEALTH -> MaterialTheme.colorScheme.error
+                    EventCategory.BREEDING -> MaterialTheme.colorScheme.tertiary
+                    EventCategory.PRODUCTION -> MaterialTheme.colorScheme.secondary
+                    EventCategory.WEIGHT -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.outline
+                }
+            ) {}
 
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = event.eventType.displayName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = DateTimeUtil.formatShortDate(event.eventDate),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-            event.notes?.let { notes ->
-                Text(
-                    text = notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = event.eventType.displayName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = DateTimeUtil.formatShortDate(event.eventDate),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+                event.notes?.let { notes ->
+                    Text(
+                        text = notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
+                    )
+                }
             }
         }
     }
