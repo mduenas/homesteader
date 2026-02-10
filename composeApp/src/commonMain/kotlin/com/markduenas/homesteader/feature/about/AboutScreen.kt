@@ -101,7 +101,7 @@ private fun AboutContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Version 1.3",
+                text = "Version 1.4",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
