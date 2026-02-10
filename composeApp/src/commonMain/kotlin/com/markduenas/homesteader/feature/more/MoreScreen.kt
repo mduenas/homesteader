@@ -171,7 +171,7 @@ private fun MoreContent(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "$4.99 - One-time purchase",
+                            text = "$7.99 - One-time purchase",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onTertiaryContainer

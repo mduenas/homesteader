@@ -82,7 +82,7 @@ class PremiumManager(
             productId = info?.productId ?: PREMIUM_PRODUCT_ID,
             title = info?.title ?: "Remove Ads",
             description = info?.description ?: "Remove all advertisements with a one-time purchase",
-            price = info?.formattedPrice ?: "$4.99",
+            price = info?.formattedPrice ?: "$7.99",
             currencyCode = "USD"
         )
     }

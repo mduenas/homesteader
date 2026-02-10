@@ -106,7 +106,7 @@ class GooglePlayBillingService(
                     productId = details.productId,
                     title = details.title,
                     description = details.description,
-                    formattedPrice = details.oneTimePurchaseOfferDetails?.formattedPrice ?: "$4.99"
+                    formattedPrice = details.oneTimePurchaseOfferDetails?.formattedPrice ?: "$7.99"
                 )
             }
         }

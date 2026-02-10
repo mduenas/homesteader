@@ -12,7 +12,7 @@
 
 /* Begin PBXFileReference section */
 		5A8D457EAFA819D5BA0FA261 /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
-		B5A4AEB8EC2CA2E42FBE601F /* homesteader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = homesteader.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B5A4AEB8EC2CA2E42FBE601F /* Steady Hand.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Steady Hand.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FC41DDA599AC616E983D21C9 /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
 		FEF8074DE38F23CDB7D0E951 /* Pods_iosApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -86,7 +86,7 @@
 		D2F99A1C77D6C836162AECDA /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B5A4AEB8EC2CA2E42FBE601F /* homesteader.app */,
+				B5A4AEB8EC2CA2E42FBE601F /* Steady Hand.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,7 +115,7 @@
 			);
 			name = iosApp;
 			productName = iosApp;
-			productReference = B5A4AEB8EC2CA2E42FBE601F /* homesteader.app */;
+			productReference = B5A4AEB8EC2CA2E42FBE601F /* Steady Hand.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -268,7 +268,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = A8AAE5A4T6;
 				ENABLE_PREVIEWS = YES;
@@ -423,7 +423,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = A8AAE5A4T6;
 				ENABLE_PREVIEWS = YES;
