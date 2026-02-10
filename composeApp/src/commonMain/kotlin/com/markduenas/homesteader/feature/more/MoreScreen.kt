@@ -127,7 +127,7 @@ private fun MoreContent(
             item {
                 MoreMenuItem(
                     icon = "i",
-                    title = "About Homesteader",
+                    title = "About Steady Hand",
                     subtitle = "Version info and support",
                     onClick = onNavigateToAbout
                 )

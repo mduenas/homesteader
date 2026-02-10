@@ -83,7 +83,7 @@ private fun SpeciesSetupContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Welcome to Homesteader") },
+                title = { Text("Welcome to Steady Hand") },
                 actions = {
                     TextButton(onClick = { onIntent(SpeciesSetupIntent.Skip) }) {
                         Text("Skip")

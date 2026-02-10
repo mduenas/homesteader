@@ -207,7 +207,7 @@ private fun PremiumActiveView() {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Thank you for supporting Homesteader.\nYou have full access with no ads.",
+            text = "Thank you for supporting Steady Hand.\nYou have full access with no ads.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -249,7 +249,7 @@ private fun PremiumPurchaseView(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Homesteader Premium",
+            text = "Steady Hand Premium",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
