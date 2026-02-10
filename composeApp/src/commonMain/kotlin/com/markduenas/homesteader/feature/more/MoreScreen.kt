@@ -29,6 +29,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.markduenas.homesteader.core.util.AppUrls
 import com.markduenas.homesteader.core.util.openUrl
+import com.markduenas.homesteader.feature.about.AboutScreen
 import com.markduenas.homesteader.feature.backup.BackupScreen
 import com.markduenas.homesteader.feature.premium.PremiumScreen
 import com.markduenas.homesteader.feature.reports.ReportsScreen
@@ -44,7 +45,7 @@ class MoreScreen : Screen {
             onNavigateToReports = { navigator.push(ReportsScreen()) },
             onNavigateToSettings = { navigator.push(SettingsScreen()) },
             onNavigateToBackup = { navigator.push(BackupScreen()) },
-            onNavigateToAbout = { /* TODO: Implement about */ },
+            onNavigateToAbout = { navigator.push(AboutScreen()) },
             onNavigateToPremium = { navigator.push(PremiumScreen()) },
             onOpenPrivacyPolicy = { openUrl(AppUrls.PRIVACY_POLICY) }
         )

@@ -10,4 +10,5 @@ expect fun openUrl(url: String)
  */
 object AppUrls {
     const val PRIVACY_POLICY = "https://www.markduenas.com/privacy"
+    const val SUPPORT_EMAIL = "mailto:markduenas@gmail.com"
 }
