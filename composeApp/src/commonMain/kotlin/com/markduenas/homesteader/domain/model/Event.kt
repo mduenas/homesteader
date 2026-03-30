@@ -15,6 +15,7 @@ enum class EventType(val displayName: String, val category: EventCategory) {
     INJURY("Injury", EventCategory.HEALTH),
     DEWORMING("Deworming", EventCategory.HEALTH),
     HOOF_TRIM("Hoof Trim", EventCategory.HEALTH),
+    BANDING("Banding", EventCategory.HEALTH),
 
     // Breeding events
     HEAT_OBSERVED("Heat Observed", EventCategory.BREEDING),
