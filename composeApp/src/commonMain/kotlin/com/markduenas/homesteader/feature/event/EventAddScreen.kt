@@ -44,6 +44,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.markduenas.homesteader.core.designsystem.components.DatePickerField
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.domain.model.EventCategory
 import com.markduenas.homesteader.domain.model.EventType
@@ -233,14 +234,11 @@ private fun EventAddForm(
         }
 
         // Event Date
-        OutlinedTextField(
+        DatePickerField(
             value = state.eventDate,
-            onValueChange = { onIntent(EventAddIntent.UpdateEventDate(it)) },
-            label = { Text("Event Date") },
-            placeholder = { Text("YYYY-MM-DD") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            onDateSelected = { onIntent(EventAddIntent.UpdateEventDate(it)) },
+            label = "Event Date",
+            modifier = Modifier.fillMaxWidth()
         )
 
         // Category-specific fields
@@ -387,14 +385,11 @@ private fun BreedingEventFields(
             }
 
             if (state.isPregnant == true) {
-                OutlinedTextField(
+                DatePickerField(
                     value = state.expectedDueDate,
-                    onValueChange = { onIntent(EventAddIntent.UpdateExpectedDueDate(it)) },
-                    label = { Text("Expected Due Date") },
-                    placeholder = { Text("YYYY-MM-DD") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    onDateSelected = { onIntent(EventAddIntent.UpdateExpectedDueDate(it)) },
+                    label = "Expected Due Date",
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

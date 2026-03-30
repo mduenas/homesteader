@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,14 +37,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
+import com.markduenas.homesteader.core.designsystem.components.DatePickerField
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
+import com.markduenas.homesteader.core.util.rememberImagePickerLauncher
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.Sex
 import com.markduenas.homesteader.domain.model.Species
@@ -60,9 +67,7 @@ data class AnimalEditScreen(val animalId: String? = null) : Screen {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     is AnimalEditEffect.NavigateBack -> navigator.pop()
-                    is AnimalEditEffect.ShowError -> {
-                        // Show snackbar or toast
-                    }
+                    is AnimalEditEffect.ShowError -> {}
                 }
             }
         }
@@ -89,9 +94,7 @@ private fun AnimalEditContent(
             TopAppBar(
                 title = { Text(if (isEditing) "Edit Animal" else "Add Animal") },
                 navigationIcon = {
-                    TextButton(onClick = onBackClick) {
-                        Text("Cancel")
-                    }
+                    TextButton(onClick = onBackClick) { Text("Cancel") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
@@ -119,10 +122,7 @@ private fun AnimalEditContent(
             if (state.isLoading) {
                 LoadingIndicator()
             } else {
-                AnimalEditForm(
-                    state = state,
-                    onIntent = onIntent
-                )
+                AnimalEditForm(state = state, onIntent = onIntent)
             }
         }
     }
@@ -135,6 +135,10 @@ private fun AnimalEditForm(
     onIntent: (AnimalEditIntent) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val pickImage = rememberImagePickerLauncher { uri ->
+        if (uri != null) onIntent(AnimalEditIntent.UpdatePhotoUri(uri))
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -142,6 +146,42 @@ private fun AnimalEditForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // Photo picker
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (state.photoUri.isNotBlank()) {
+                AsyncImage(
+                    model = state.photoUri,
+                    contentDescription = "Animal photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(120.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = state.name.firstOrNull()?.uppercase()
+                                ?: state.tagId.firstOrNull()?.uppercase()
+                                ?: "?",
+                            style = MaterialTheme.typography.displaySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
+            TextButton(onClick = { pickImage() }) {
+                Text("📷  Change Photo")
+            }
+        }
+
         // Name field
         OutlinedTextField(
             value = state.name,
@@ -170,7 +210,7 @@ private fun AnimalEditForm(
         ) {
             OutlinedTextField(
                 value = state.species.displayName,
-                onValueChange = { },
+                onValueChange = {},
                 readOnly = true,
                 label = { Text("Species *") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = speciesExpanded) },
@@ -228,29 +268,23 @@ private fun AnimalEditForm(
             }
         }
 
-        // Birth date field
-        OutlinedTextField(
+        // Birth date
+        DatePickerField(
             value = state.birthDate,
-            onValueChange = { onIntent(AnimalEditIntent.UpdateBirthDate(it)) },
-            label = { Text("Birth Date") },
-            placeholder = { Text("YYYY-MM-DD") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            onDateSelected = { onIntent(AnimalEditIntent.UpdateBirthDate(it)) },
+            label = "Birth Date",
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // Acquisition date field
-        OutlinedTextField(
+        // Acquisition date
+        DatePickerField(
             value = state.acquisitionDate,
-            onValueChange = { onIntent(AnimalEditIntent.UpdateAcquisitionDate(it)) },
-            label = { Text("Acquisition Date") },
-            placeholder = { Text("YYYY-MM-DD") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            onDateSelected = { onIntent(AnimalEditIntent.UpdateAcquisitionDate(it)) },
+            label = "Acquisition Date",
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // Status dropdown (only show for editing)
+        // Status dropdown (editing only)
         if (state.isEditing) {
             var statusExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
@@ -259,7 +293,7 @@ private fun AnimalEditForm(
             ) {
                 OutlinedTextField(
                     value = state.status.displayName,
-                    onValueChange = { },
+                    onValueChange = {},
                     readOnly = true,
                     label = { Text("Status") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = statusExpanded) },
@@ -317,7 +351,6 @@ private fun AnimalEditForm(
             maxLines = 5
         )
 
-        // Error message
         state.error?.let { error ->
             Text(
                 text = error,
@@ -326,6 +359,7 @@ private fun AnimalEditForm(
             )
         }
 
-        Spacer(modifier = Modifier.height(80.dp)) // Space for FAB
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
+

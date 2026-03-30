@@ -43,6 +43,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.sqldelight.android)
             implementation(libs.koin.android)
+            implementation(libs.coil3.android)
         }
 
         iosMain.dependencies {
@@ -85,6 +86,9 @@ kotlin {
 
             // UUID
             implementation(libs.uuid)
+
+            // Coil (image loading)
+            implementation(libs.coil3.compose)
         }
 
         commonTest.dependencies {

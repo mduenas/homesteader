@@ -36,11 +36,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import coil3.compose.AsyncImage
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.core.util.DateTimeUtil
 import com.markduenas.homesteader.domain.model.Animal
@@ -180,22 +183,33 @@ private fun AnimalDetailBody(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Header with avatar
+        // Header with avatar / photo
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Surface(
-                modifier = Modifier.size(80.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = animal.displayName.first().uppercase(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+            if (!animal.photoUri.isNullOrBlank()) {
+                AsyncImage(
+                    model = animal.photoUri,
+                    contentDescription = "${animal.displayName} photo",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(80.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = animal.displayName.first().uppercase(),
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             }
 

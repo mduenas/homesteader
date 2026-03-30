@@ -6,6 +6,7 @@ import com.benasher44.uuid.uuid4
 import com.markduenas.homesteader.core.mvi.UiEffect
 import com.markduenas.homesteader.core.mvi.UiIntent
 import com.markduenas.homesteader.core.mvi.UiState
+import com.markduenas.homesteader.core.util.DateTimeUtil
 import com.markduenas.homesteader.data.repository.AnimalRepository
 import com.markduenas.homesteader.domain.model.Animal
 import com.markduenas.homesteader.domain.model.AnimalStatus
@@ -33,7 +34,7 @@ data class AnimalEditState(
     val breed: String = "",
     val sex: Sex = Sex.UNKNOWN,
     val birthDate: String = "",
-    val acquisitionDate: String = "",
+    val acquisitionDate: String = DateTimeUtil.today().toString(),
     val status: AnimalStatus = AnimalStatus.ACTIVE,
     val motherId: String = "",
     val fatherId: String = "",
@@ -53,6 +54,7 @@ sealed interface AnimalEditIntent : UiIntent {
     data class UpdateMotherId(val id: String) : AnimalEditIntent
     data class UpdateFatherId(val id: String) : AnimalEditIntent
     data class UpdateNotes(val notes: String) : AnimalEditIntent
+    data class UpdatePhotoUri(val uri: String) : AnimalEditIntent
     data object Save : AnimalEditIntent
 }
 
@@ -91,6 +93,7 @@ class AnimalEditViewModel(
             is AnimalEditIntent.UpdateMotherId -> _state.update { it.copy(motherId = intent.id) }
             is AnimalEditIntent.UpdateFatherId -> _state.update { it.copy(fatherId = intent.id) }
             is AnimalEditIntent.UpdateNotes -> _state.update { it.copy(notes = intent.notes) }
+            is AnimalEditIntent.UpdatePhotoUri -> _state.update { it.copy(photoUri = intent.uri) }
             is AnimalEditIntent.Save -> save()
         }
     }
