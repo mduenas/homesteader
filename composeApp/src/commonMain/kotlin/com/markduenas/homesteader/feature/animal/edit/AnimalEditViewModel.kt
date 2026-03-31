@@ -39,7 +39,8 @@ data class AnimalEditState(
     val motherId: String = "",
     val fatherId: String = "",
     val notes: String = "",
-    val photoUri: String = ""
+    val photoUri: String = "",
+    val pendingPhotoUri: String? = null
 ) : UiState
 
 sealed interface AnimalEditIntent : UiIntent {
@@ -55,6 +56,8 @@ sealed interface AnimalEditIntent : UiIntent {
     data class UpdateFatherId(val id: String) : AnimalEditIntent
     data class UpdateNotes(val notes: String) : AnimalEditIntent
     data class UpdatePhotoUri(val uri: String) : AnimalEditIntent
+    data class SetPendingPhoto(val uri: String) : AnimalEditIntent
+    data object DismissCropDialog : AnimalEditIntent
     data object Save : AnimalEditIntent
 }
 
@@ -93,7 +96,9 @@ class AnimalEditViewModel(
             is AnimalEditIntent.UpdateMotherId -> _state.update { it.copy(motherId = intent.id) }
             is AnimalEditIntent.UpdateFatherId -> _state.update { it.copy(fatherId = intent.id) }
             is AnimalEditIntent.UpdateNotes -> _state.update { it.copy(notes = intent.notes) }
-            is AnimalEditIntent.UpdatePhotoUri -> _state.update { it.copy(photoUri = intent.uri) }
+            is AnimalEditIntent.UpdatePhotoUri -> _state.update { it.copy(photoUri = intent.uri, pendingPhotoUri = null) }
+            is AnimalEditIntent.SetPendingPhoto -> _state.update { it.copy(pendingPhotoUri = intent.uri) }
+            is AnimalEditIntent.DismissCropDialog -> _state.update { it.copy(pendingPhotoUri = null) }
             is AnimalEditIntent.Save -> save()
         }
     }

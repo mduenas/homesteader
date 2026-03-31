@@ -1,6 +1,7 @@
 package com.markduenas.homesteader.core.designsystem.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
@@ -16,7 +17,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import com.markduenas.homesteader.core.util.DateTimeUtil
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -57,9 +57,16 @@ fun DatePickerField(
             label = { Text(label) },
             placeholder = { Text("Tap to select") },
             trailingIcon = { Text("📅") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        // Transparent overlay on top — captures taps before the TextField consumes them
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable(role = Role.Button) { showDialog = true }
+                .matchParentSize()
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) { showDialog = true }
         )
     }
 

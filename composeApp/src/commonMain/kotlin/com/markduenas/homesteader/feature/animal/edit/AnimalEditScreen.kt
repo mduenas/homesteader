@@ -48,6 +48,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import com.markduenas.homesteader.core.designsystem.components.DatePickerField
+import com.markduenas.homesteader.core.designsystem.components.ImageCropDialog
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.core.util.rememberImagePickerLauncher
 import com.markduenas.homesteader.domain.model.AnimalStatus
@@ -78,6 +79,17 @@ data class AnimalEditScreen(val animalId: String? = null) : Screen {
             onBackClick = { navigator.pop() },
             isEditing = animalId != null
         )
+
+        // Show crop dialog when a photo has been picked but not yet cropped
+        state.pendingPhotoUri?.let { uri ->
+            ImageCropDialog(
+                sourceUri = uri,
+                onCropComplete = { croppedUri ->
+                    viewModel.handleIntent(AnimalEditIntent.UpdatePhotoUri(croppedUri))
+                },
+                onDismiss = { viewModel.handleIntent(AnimalEditIntent.DismissCropDialog) }
+            )
+        }
     }
 }
 
@@ -136,7 +148,7 @@ private fun AnimalEditForm(
     modifier: Modifier = Modifier
 ) {
     val pickImage = rememberImagePickerLauncher { uri ->
-        if (uri != null) onIntent(AnimalEditIntent.UpdatePhotoUri(uri))
+        if (uri != null) onIntent(AnimalEditIntent.SetPendingPhoto(uri))
     }
 
     Column(
