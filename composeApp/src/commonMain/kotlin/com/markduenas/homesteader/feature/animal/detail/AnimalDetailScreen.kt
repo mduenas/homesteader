@@ -48,7 +48,11 @@ import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.core.util.DateTimeUtil
 import com.markduenas.homesteader.domain.model.Animal
 import com.markduenas.homesteader.domain.model.AnimalEvent
+import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.EventCategory
+import com.markduenas.homesteader.domain.model.EventType
+import com.markduenas.homesteader.domain.model.HarvestEventData
+import com.markduenas.homesteader.domain.model.StatusChangeEventData
 import com.markduenas.homesteader.feature.animal.edit.AnimalEditScreen
 import com.markduenas.homesteader.feature.event.EventAddScreen
 import org.koin.core.parameter.parametersOf
@@ -243,6 +247,15 @@ private fun AnimalDetailBody(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // Sale / Harvest / Transfer summary card
+        if (animal.status != AnimalStatus.ACTIVE) {
+            val transitionEvent = events.firstOrNull {
+                it.eventType == EventType.STATUS_CHANGE || it.eventType == EventType.HARVEST
+            }
+            SaleHarvestSummaryCard(animal = animal, event = transitionEvent)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Basic Information Card
         DetailCard(title = "Basic Information") {
@@ -454,4 +467,139 @@ private fun DeleteConfirmationDialog(
             }
         }
     )
+}
+
+@Composable
+private fun SaleHarvestSummaryCard(
+    animal: Animal,
+    event: AnimalEvent?,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = when (animal.status) {
+        AnimalStatus.SOLD -> MaterialTheme.colorScheme.secondaryContainer
+        AnimalStatus.DECEASED -> MaterialTheme.colorScheme.errorContainer
+        AnimalStatus.TRANSFERRED -> MaterialTheme.colorScheme.tertiaryContainer
+        AnimalStatus.ACTIVE -> MaterialTheme.colorScheme.surface
+    }
+    val onContainerColor = when (animal.status) {
+        AnimalStatus.SOLD -> MaterialTheme.colorScheme.onSecondaryContainer
+        AnimalStatus.DECEASED -> MaterialTheme.colorScheme.onErrorContainer
+        AnimalStatus.TRANSFERRED -> MaterialTheme.colorScheme.onTertiaryContainer
+        AnimalStatus.ACTIVE -> MaterialTheme.colorScheme.onSurface
+    }
+    val title = when (animal.status) {
+        AnimalStatus.SOLD -> "Sale Record"
+        AnimalStatus.DECEASED -> "Death / Harvest Record"
+        AnimalStatus.TRANSFERRED -> "Transfer Record"
+        AnimalStatus.ACTIVE -> ""
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = onContainerColor
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (event == null) {
+                Text(
+                    text = "No details recorded.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = onContainerColor.copy(alpha = 0.7f)
+                )
+            } else {
+                Text(
+                    text = "Date: ${DateTimeUtil.formatDate(event.eventDate)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = onContainerColor
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+
+                when (val data = event.eventData) {
+                    is StatusChangeEventData -> {
+                        data.salePrice?.let {
+                            Text(
+                                text = "Sale Price: $${"%.2f".format(it)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.buyer?.let {
+                            Text(
+                                text = "Buyer: $it",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.buyerContact?.let {
+                            Text(
+                                text = "Contact: $it",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = onContainerColor.copy(alpha = 0.8f)
+                            )
+                        }
+                        data.reason?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = onContainerColor.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                    is HarvestEventData -> {
+                        data.liveWeight?.let {
+                            Text(
+                                text = "Live Weight: $it ${data.weightUnit}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.dressedWeight?.let {
+                            Text(
+                                text = "Dressed Weight: $it ${data.weightUnit}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.purpose?.let {
+                            Text(
+                                text = "Purpose: $it",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.revenue?.let {
+                            Text(
+                                text = "Revenue: $${"%.2f".format(it)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = onContainerColor
+                            )
+                        }
+                        data.buyer?.let {
+                            Text(
+                                text = "Buyer: $it",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = onContainerColor.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                    else -> {
+                        event.notes?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = onContainerColor.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

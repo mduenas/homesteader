@@ -80,7 +80,19 @@ data class AnimalEditScreen(val animalId: String? = null) : Screen {
             isEditing = animalId != null
         )
 
-        // Show crop dialog when a photo has been picked but not yet cropped
+        // Status transition dialog (SOLD / TRANSFERRED / DECEASED)
+        if (state.showStatusTransitionDialog) {
+            StatusTransitionDialog(
+                animalName = state.name.ifBlank { state.tagId },
+                newStatus = state.status,
+                onConfirm = { data ->
+                    viewModel.handleIntent(AnimalEditIntent.ConfirmStatusTransition(data))
+                },
+                onDismiss = { viewModel.handleIntent(AnimalEditIntent.DismissStatusTransitionDialog) }
+            )
+        }
+
+        // Photo crop dialog
         state.pendingPhotoUri?.let { uri ->
             ImageCropDialog(
                 sourceUri = uri,

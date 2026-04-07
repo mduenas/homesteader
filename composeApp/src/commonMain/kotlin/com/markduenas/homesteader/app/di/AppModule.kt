@@ -81,7 +81,7 @@ val serviceModule = module {
 val viewModelModule = module {
     factory { AnimalListViewModel(get()) }
     factory { (animalId: String) -> AnimalDetailViewModel(animalId, get(), get()) }
-    factory { (animalId: String?) -> AnimalEditViewModel(animalId, get()) }
+    factory { (animalId: String?) -> AnimalEditViewModel(animalId, get(), get()) }
     factory { (animalId: String, animalName: String, eventId: String?) -> EventAddViewModel(animalId, animalName, eventId, get(), get(), get()) }
     factory { SpeciesSetupViewModel(get()) }
     factory { DashboardViewModel(get(), get(), get()) }

@@ -37,6 +37,7 @@ enum class EventType(val displayName: String, val category: EventCategory) {
 
     // Status events
     STATUS_CHANGE("Status Change", EventCategory.STATUS),
+    HARVEST("Harvest", EventCategory.STATUS),
 
     // General
     NOTE("Note", EventCategory.GENERAL),
@@ -147,7 +148,19 @@ data class StatusChangeEventData(
     val newStatus: String,
     val reason: String? = null,
     val salePrice: Double? = null,
-    val buyer: String? = null
+    val buyer: String? = null,
+    val buyerContact: String? = null
+) : EventData()
+
+@Serializable
+data class HarvestEventData(
+    val liveWeight: Double? = null,
+    val dressedWeight: Double? = null,
+    val weightUnit: String = "lbs",
+    val purpose: String? = null,     // "personal use", "sale", "donation"
+    val revenue: Double? = null,     // if sold
+    val buyer: String? = null,
+    val notes: String? = null
 ) : EventData()
 
 @Serializable

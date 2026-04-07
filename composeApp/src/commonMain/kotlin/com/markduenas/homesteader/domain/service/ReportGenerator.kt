@@ -24,6 +24,8 @@ import com.markduenas.homesteader.domain.model.ReportRow
 import com.markduenas.homesteader.domain.model.ReportSummary
 import com.markduenas.homesteader.domain.model.ReportType
 import com.markduenas.homesteader.domain.model.SummaryItem
+import com.markduenas.homesteader.domain.model.HarvestEventData
+import com.markduenas.homesteader.domain.model.StatusChangeEventData
 import com.markduenas.homesteader.domain.model.WeightEventData
 import com.markduenas.homesteader.domain.model.WeightRow
 import com.markduenas.homesteader.domain.model.WeightTrackingReport
@@ -46,6 +48,7 @@ class ReportGenerator(
             ReportType.PRODUCTION_REPORT -> generateProductionReport(dateRange)
             ReportType.WEIGHT_TRACKING -> generateWeightTrackingReport(dateRange)
             ReportType.EVENT_TIMELINE -> generateEventTimelineReport(dateRange)
+            ReportType.SALES_REVENUE -> generateSalesRevenueReport(dateRange)
         }
     }
 
@@ -94,6 +97,14 @@ class ReportGenerator(
                 ReportColumn("Animal", 1.5f),
                 ReportColumn("Event Type", 1.2f),
                 ReportColumn("Details", 2f)
+            )
+            ReportType.SALES_REVENUE -> listOf(
+                ReportColumn("Date", 1f),
+                ReportColumn("Animal", 1.5f),
+                ReportColumn("Species", 1f),
+                ReportColumn("Type", 0.8f),
+                ReportColumn("Revenue", 1f),
+                ReportColumn("Buyer", 1.2f)
             )
         }
     }
@@ -466,5 +477,86 @@ class ReportGenerator(
         } else {
             intPart
         }
+    }
+
+    private suspend fun generateSalesRevenueReport(dateRange: DateRange?): ReportData {
+        val animals = animalRepository.getAllAnimals().first()
+        val animalMap = animals.associateBy { it.id }
+
+        // Get all STATUS_CHANGE and HARVEST events
+        val statusEvents = eventRepository.getEventsByType(EventType.STATUS_CHANGE).first()
+        val harvestEvents = eventRepository.getEventsByType(EventType.HARVEST).first()
+        val allEvents = (statusEvents + harvestEvents).sortedByDescending { it.eventDate }
+
+        val filtered = if (dateRange != null) {
+            allEvents.filter { it.eventDate >= dateRange.startDate && it.eventDate <= dateRange.endDate }
+        } else allEvents
+
+        data class RevenueRow(
+            val date: String,
+            val animalName: String,
+            val species: String,
+            val type: String,
+            val revenue: Double?,
+            val buyer: String?
+        )
+
+        val rows = filtered.mapNotNull { event ->
+            val animal = animalMap[event.animalId] ?: return@mapNotNull null
+            val name = animal.name ?: animal.tagId ?: event.animalId
+            val species = animal.species.displayName
+            val date = DateTimeUtil.formatDate(event.eventDate)
+
+            when (val data = event.eventData) {
+                is StatusChangeEventData -> RevenueRow(
+                    date = date,
+                    animalName = name,
+                    species = species,
+                    type = data.newStatus.lowercase().replaceFirstChar { it.uppercase() },
+                    revenue = data.salePrice,
+                    buyer = data.buyer
+                )
+                is HarvestEventData -> RevenueRow(
+                    date = date,
+                    animalName = name,
+                    species = species,
+                    type = "Harvest (${data.purpose ?: "Personal Use"})",
+                    revenue = data.revenue,
+                    buyer = data.buyer
+                )
+                else -> null
+            }
+        }
+
+        val totalRevenue = rows.mapNotNull { it.revenue }.fold(0.0) { acc, v -> acc + v }
+        val soldCount = rows.count { it.type.contains("Sold", ignoreCase = true) }
+        val harvestCount = rows.count { it.type.contains("Harvest", ignoreCase = true) }
+
+        return ReportData(
+            reportType = ReportType.SALES_REVENUE,
+            title = "Sales & Revenue Report",
+            generatedAt = DateTimeUtil.nowIsoString(),
+            dateRange = dateRange,
+            summary = ReportSummary(
+                items = listOf(
+                    SummaryItem("Total Revenue", "$${"%.2f".format(totalRevenue)}"),
+                    SummaryItem("Animals Sold", soldCount.toString()),
+                    SummaryItem("Animals Harvested", harvestCount.toString()),
+                    SummaryItem("Total Records", rows.size.toString())
+                )
+            ),
+            rows = rows.map { row ->
+                ReportRow(
+                    columns = listOf(
+                        row.date,
+                        row.animalName,
+                        row.species,
+                        row.type,
+                        row.revenue?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.buyer ?: "-"
+                    )
+                )
+            }
+        )
     }
 }

@@ -11,7 +11,8 @@ enum class ReportType(val displayName: String, val description: String) {
     HEALTH_HISTORY("Health History", "Vaccinations, treatments, and vet visits"),
     PRODUCTION_REPORT("Production Report", "Milk, egg, and fiber production records"),
     WEIGHT_TRACKING("Weight Tracking", "Weight records and growth trends"),
-    EVENT_TIMELINE("Event Timeline", "All events in chronological order")
+    EVENT_TIMELINE("Event Timeline", "All events in chronological order"),
+    SALES_REVENUE("Sales & Revenue", "Revenue from sold and harvested animals")
 }
 
 /**

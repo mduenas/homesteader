@@ -6,6 +6,7 @@ import com.markduenas.homesteader.domain.model.BreedingEventData
 import com.markduenas.homesteader.domain.model.EventData
 import com.markduenas.homesteader.domain.model.EventType
 import com.markduenas.homesteader.domain.model.GeneralEventData
+import com.markduenas.homesteader.domain.model.HarvestEventData
 import com.markduenas.homesteader.domain.model.HealthEventData
 import com.markduenas.homesteader.domain.model.MovementEventData
 import com.markduenas.homesteader.domain.model.ProductionEventData
@@ -24,6 +25,7 @@ private val eventDataModule = SerializersModule {
         subclass(WeightEventData::class)
         subclass(MovementEventData::class)
         subclass(StatusChangeEventData::class)
+        subclass(HarvestEventData::class)
         subclass(GeneralEventData::class)
     }
 }
@@ -63,7 +65,10 @@ private fun parseEventData(eventType: String, jsonString: String?): EventData? {
             com.markduenas.homesteader.domain.model.EventCategory.MOVEMENT ->
                 json.decodeFromString<MovementEventData>(jsonString)
             com.markduenas.homesteader.domain.model.EventCategory.STATUS ->
-                json.decodeFromString<StatusChangeEventData>(jsonString)
+                if (type == EventType.HARVEST)
+                    json.decodeFromString<HarvestEventData>(jsonString)
+                else
+                    json.decodeFromString<StatusChangeEventData>(jsonString)
             com.markduenas.homesteader.domain.model.EventCategory.GENERAL ->
                 json.decodeFromString<GeneralEventData>(jsonString)
         }
@@ -83,6 +88,7 @@ fun serializeEventData(eventData: EventData?): String? {
             is WeightEventData -> json.encodeToString(WeightEventData.serializer(), eventData)
             is MovementEventData -> json.encodeToString(MovementEventData.serializer(), eventData)
             is StatusChangeEventData -> json.encodeToString(StatusChangeEventData.serializer(), eventData)
+            is HarvestEventData -> json.encodeToString(HarvestEventData.serializer(), eventData)
             is GeneralEventData -> json.encodeToString(GeneralEventData.serializer(), eventData)
         }
     } catch (e: Exception) {
