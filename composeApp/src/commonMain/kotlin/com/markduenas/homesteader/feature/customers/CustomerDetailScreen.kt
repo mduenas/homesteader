@@ -41,6 +41,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
+import com.markduenas.homesteader.core.util.formatDecimal
 import com.markduenas.homesteader.domain.model.Customer
 import com.markduenas.homesteader.domain.model.EventType
 
@@ -228,7 +229,7 @@ private fun CustomerDetailContent(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Total: $${String.format("%.2f", state.totalRevenue)}",
+                            text = "Total: $${state.totalRevenue.formatDecimal()}",
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -310,7 +311,7 @@ private fun PurchaseHistoryItem(purchase: CustomerPurchase) {
                 Column(horizontalAlignment = Alignment.End) {
                     if (purchase.totalAmount != null) {
                         Text(
-                            text = "$${String.format("%.2f", purchase.totalAmount)}",
+                            text = "$${purchase.totalAmount.formatDecimal()}",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
@@ -318,7 +319,7 @@ private fun PurchaseHistoryItem(purchase: CustomerPurchase) {
                     }
                     if (purchase.weightLbs != null) {
                         Text(
-                            text = "${String.format("%.1f", purchase.weightLbs)} lbs",
+                            text = "${purchase.weightLbs.formatDecimal(1)} lbs",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

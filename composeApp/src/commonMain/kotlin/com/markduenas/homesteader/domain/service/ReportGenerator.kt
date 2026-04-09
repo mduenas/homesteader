@@ -1,6 +1,7 @@
 package com.markduenas.homesteader.domain.service
 
 import com.markduenas.homesteader.core.util.DateTimeUtil
+import com.markduenas.homesteader.core.util.formatDecimal
 import com.markduenas.homesteader.data.repository.AnimalRepository
 import com.markduenas.homesteader.data.repository.EventRepository
 import com.markduenas.homesteader.domain.model.AnimalInventoryReport
@@ -584,9 +585,9 @@ class ReportGenerator(
             dateRange = dateRange,
             summary = ReportSummary(
                 items = listOf(
-                    SummaryItem("Gross Revenue", "$${"%.2f".format(totalGross)}"),
-                    SummaryItem("Processing Costs", "$${"%.2f".format(totalProcessing)}"),
-                    SummaryItem("Net Revenue", "$${"%.2f".format(totalNet)}"),
+                    SummaryItem("Gross Revenue", "$${totalGross.formatDecimal()}"),
+                    SummaryItem("Processing Costs", "$${totalProcessing.formatDecimal()}"),
+                    SummaryItem("Net Revenue", "$${totalNet.formatDecimal()}"),
                     SummaryItem("Animals Sold", soldCount.toString()),
                     SummaryItem("Animals Harvested", harvestCount.toString()),
                     SummaryItem("Total Records", rows.size.toString())
@@ -602,10 +603,10 @@ class ReportGenerator(
                         row.type,
                         row.liveWeight,
                         row.dressedWeight,
-                        row.grossRevenue?.let { "$${"%.2f".format(it)}" } ?: "-",
-                        row.processingCost?.let { "$${"%.2f".format(it)}" } ?: "-",
-                        row.netRevenue?.let { "$${"%.2f".format(it)}" } ?: "-",
-                        row.pricePerLb?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.grossRevenue?.let { "$${it.formatDecimal()}" } ?: "-",
+                        row.processingCost?.let { "$${it.formatDecimal()}" } ?: "-",
+                        row.netRevenue?.let { "$${it.formatDecimal()}" } ?: "-",
+                        row.pricePerLb?.let { "$${it.formatDecimal()}" } ?: "-",
                         row.buyer ?: "-"
                     )
                 )

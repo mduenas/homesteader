@@ -28,6 +28,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.markduenas.homesteader.core.designsystem.components.CustomerSelectorField
 import com.markduenas.homesteader.core.util.DateTimeUtil
+import com.markduenas.homesteader.core.util.formatDecimal
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.Species
 import kotlinx.datetime.LocalDate
@@ -369,7 +370,7 @@ private fun DeceasedDialog(
                                 val dressed = dressedWeight.toDoubleOrNull()
                                 if (dressed != null && dressed > 0.0 && grossRevenue > 0.0) {
                                     Text(
-                                        text = "Revenue: ${"%.2f".format(grossRevenue / dressed)}/lb dressed",
+                                        text = "Revenue: ${(grossRevenue / dressed).formatDecimal()}/lb dressed",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -523,7 +524,7 @@ private fun BreakdownRow(label: String, amount: Double, bold: Boolean = false) {
             else -> MaterialTheme.colorScheme.onSurface
         }
         Text(
-            text = if (amount < 0) "-${"%.2f".format(-amount)}" else "$${"%.2f".format(amount)}",
+            text = if (amount < 0) "-${(-amount).formatDecimal()}" else "$${amount.formatDecimal()}",
             style = MaterialTheme.typography.bodySmall,
             color = color,
             fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal

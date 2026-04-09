@@ -46,6 +46,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import coil3.compose.AsyncImage
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.core.util.DateTimeUtil
+import com.markduenas.homesteader.core.util.formatDecimal
 import com.markduenas.homesteader.domain.model.Animal
 import com.markduenas.homesteader.domain.model.AnimalEvent
 import com.markduenas.homesteader.domain.model.AnimalStatus
@@ -536,7 +537,7 @@ private fun SaleHarvestSummaryCard(
                 when (val data = event.eventData) {
                     is StatusChangeEventData -> {
                         data.salePrice?.let {
-                            SummaryRow("Sale Price", "$${"%.2f".format(it)}", onContainerColor, bold = true)
+                            SummaryRow("Sale Price", "$${it.formatDecimal()}", onContainerColor, bold = true)
                         }
                         data.saleWeight?.let {
                             SummaryRow("Live Weight at Sale", "$it ${data.weightUnit}", onContainerColor)
@@ -561,7 +562,7 @@ private fun SaleHarvestSummaryCard(
                         }
                         data.purpose?.let { SummaryRow("Purpose", it.replaceFirstChar { c -> c.uppercaseChar() }, onContainerColor) }
                         data.revenue?.let { rev ->
-                            SummaryRow("Gross Revenue", "$${"%.2f".format(rev)}", onContainerColor, bold = true)
+                            SummaryRow("Gross Revenue", "$${rev.formatDecimal()}", onContainerColor, bold = true)
                         }
                         // Processing costs
                         val killFee = data.killFee
@@ -569,23 +570,23 @@ private fun SaleHarvestSummaryCard(
                         val dressedWt = data.dressedWeight
                         val processingCost = (killFee ?: 0.0) + ((butcherRate ?: 0.0) * (dressedWt ?: 0.0))
                         if (processingCost > 0.0) {
-                            killFee?.let { SummaryRow("Kill Fee", "$${"%.2f".format(it)}", onContainerColor, secondary = true) }
+                            killFee?.let { SummaryRow("Kill Fee", "$${it.formatDecimal()}", onContainerColor, secondary = true) }
                             if (butcherRate != null && dressedWt != null) {
                                 SummaryRow(
                                     "Butcher Cost",
-                                    "$${"%.2f".format(butcherRate * dressedWt)} ($${"%.2f".format(butcherRate)}/lb)",
+                                    "$${(butcherRate * dressedWt).formatDecimal()} ($${butcherRate.formatDecimal()}/lb)",
                                     onContainerColor, secondary = true
                                 )
                             }
                             val netRev = (data.revenue ?: 0.0) - processingCost
-                            SummaryRow("Net Revenue", "$${"%.2f".format(netRev)}", onContainerColor, bold = true)
+                            SummaryRow("Net Revenue", "$${netRev.formatDecimal()}", onContainerColor, bold = true)
                         }
                         // $/lb dressed
                         val rev = data.revenue
                         if (rev != null && dressedWt != null && dressedWt > 0.0) {
                             SummaryRow(
                                 "Revenue/lb Dressed",
-                                "$${"%.2f".format(rev / dressedWt)}",
+                                "$${(rev / dressedWt).formatDecimal()}",
                                 onContainerColor, secondary = true
                             )
                         }
