@@ -54,6 +54,7 @@ import com.markduenas.homesteader.core.util.rememberImagePickerLauncher
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.Sex
 import com.markduenas.homesteader.domain.model.Species
+import kotlinx.datetime.LocalDate
 import org.koin.core.parameter.parametersOf
 
 data class AnimalEditScreen(val animalId: String? = null) : Screen {
@@ -85,6 +86,10 @@ data class AnimalEditScreen(val animalId: String? = null) : Screen {
             StatusTransitionDialog(
                 animalName = state.name.ifBlank { state.tagId },
                 newStatus = state.status,
+                species = state.species,
+                birthDate = state.birthDate.ifBlank { null }?.let {
+                    runCatching { LocalDate.parse(it) }.getOrNull()
+                },
                 onConfirm = { data ->
                     viewModel.handleIntent(AnimalEditIntent.ConfirmStatusTransition(data))
                 },

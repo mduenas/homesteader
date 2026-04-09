@@ -55,6 +55,7 @@ import com.markduenas.homesteader.domain.model.HarvestEventData
 import com.markduenas.homesteader.domain.model.StatusChangeEventData
 import com.markduenas.homesteader.feature.animal.edit.AnimalEditScreen
 import com.markduenas.homesteader.feature.event.EventAddScreen
+import kotlinx.datetime.LocalDate
 import org.koin.core.parameter.parametersOf
 
 data class AnimalDetailScreen(val animalId: String) : Screen {
@@ -514,92 +515,115 @@ private fun SaleHarvestSummaryCard(
                     color = onContainerColor.copy(alpha = 0.7f)
                 )
             } else {
-                Text(
-                    text = "Date: ${DateTimeUtil.formatDate(event.eventDate)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = onContainerColor
-                )
-                Spacer(modifier = Modifier.height(4.dp))
+                // Age at event date
+                val ageText = animal.birthDate?.let { birth ->
+                    val totalDays = (event.eventDate.toEpochDays() - birth.toEpochDays()).toInt()
+                    when {
+                        totalDays < 0 -> null
+                        totalDays < 30 -> "$totalDays days"
+                        totalDays < 365 -> "${totalDays / 30} months, ${totalDays % 30} days"
+                        else -> {
+                            val years = totalDays / 365
+                            val months = (totalDays % 365) / 30
+                            if (months > 0) "$years yr $months mo" else "$years years"
+                        }
+                    }
+                }
+
+                SummaryRow("Date", DateTimeUtil.formatDate(event.eventDate), onContainerColor)
+                ageText?.let { SummaryRow("Age", it, onContainerColor) }
 
                 when (val data = event.eventData) {
                     is StatusChangeEventData -> {
                         data.salePrice?.let {
-                            Text(
-                                text = "Sale Price: $${"%.2f".format(it)}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
-                            )
+                            SummaryRow("Sale Price", "$${"%.2f".format(it)}", onContainerColor, bold = true)
                         }
-                        data.buyer?.let {
-                            Text(
-                                text = "Buyer: $it",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
-                            )
+                        data.saleWeight?.let {
+                            SummaryRow("Live Weight at Sale", "$it ${data.weightUnit}", onContainerColor)
                         }
+                        data.buyer?.let { SummaryRow("Buyer", it, onContainerColor) }
                         data.buyerContact?.let {
-                            Text(
-                                text = "Contact: $it",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onContainerColor.copy(alpha = 0.8f)
-                            )
+                            SummaryRow("Contact", it, onContainerColor, secondary = true)
                         }
                         data.reason?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onContainerColor.copy(alpha = 0.8f)
-                            )
+                            SummaryRow("Notes", it, onContainerColor, secondary = true)
                         }
                     }
                     is HarvestEventData -> {
                         data.liveWeight?.let {
-                            Text(
-                                text = "Live Weight: $it ${data.weightUnit}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
-                            )
+                            SummaryRow("Live Weight", "$it ${data.weightUnit}", onContainerColor)
                         }
                         data.dressedWeight?.let {
-                            Text(
-                                text = "Dressed Weight: $it ${data.weightUnit}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
+                            SummaryRow("Dressed Weight", "$it ${data.weightUnit}", onContainerColor)
+                        }
+                        data.numberOfAnimals?.let { n ->
+                            if (n > 1) SummaryRow("Number of Animals", "$n", onContainerColor)
+                        }
+                        data.purpose?.let { SummaryRow("Purpose", it.replaceFirstChar { c -> c.uppercaseChar() }, onContainerColor) }
+                        data.revenue?.let { rev ->
+                            SummaryRow("Gross Revenue", "$${"%.2f".format(rev)}", onContainerColor, bold = true)
+                        }
+                        // Processing costs
+                        val killFee = data.killFee
+                        val butcherRate = data.butcherPricePerPound
+                        val dressedWt = data.dressedWeight
+                        val processingCost = (killFee ?: 0.0) + ((butcherRate ?: 0.0) * (dressedWt ?: 0.0))
+                        if (processingCost > 0.0) {
+                            killFee?.let { SummaryRow("Kill Fee", "$${"%.2f".format(it)}", onContainerColor, secondary = true) }
+                            if (butcherRate != null && dressedWt != null) {
+                                SummaryRow(
+                                    "Butcher Cost",
+                                    "$${"%.2f".format(butcherRate * dressedWt)} ($${"%.2f".format(butcherRate)}/lb)",
+                                    onContainerColor, secondary = true
+                                )
+                            }
+                            val netRev = (data.revenue ?: 0.0) - processingCost
+                            SummaryRow("Net Revenue", "$${"%.2f".format(netRev)}", onContainerColor, bold = true)
+                        }
+                        // $/lb dressed
+                        val rev = data.revenue
+                        if (rev != null && dressedWt != null && dressedWt > 0.0) {
+                            SummaryRow(
+                                "Revenue/lb Dressed",
+                                "$${"%.2f".format(rev / dressedWt)}",
+                                onContainerColor, secondary = true
                             )
                         }
-                        data.purpose?.let {
-                            Text(
-                                text = "Purpose: $it",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
-                            )
-                        }
-                        data.revenue?.let {
-                            Text(
-                                text = "Revenue: $${"%.2f".format(it)}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = onContainerColor
-                            )
-                        }
-                        data.buyer?.let {
-                            Text(
-                                text = "Buyer: $it",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onContainerColor.copy(alpha = 0.8f)
-                            )
-                        }
+                        data.buyer?.let { SummaryRow("Buyer", it, onContainerColor) }
                     }
                     else -> {
                         event.notes?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = onContainerColor.copy(alpha = 0.8f)
-                            )
+                            SummaryRow("Notes", it, onContainerColor, secondary = true)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    color: androidx.compose.ui.graphics.Color,
+    bold: Boolean = false,
+    secondary: Boolean = false
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = if (secondary) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+            color = color.copy(alpha = if (secondary) 0.7f else 1f)
+        )
+        Text(
+            text = value,
+            style = if (secondary) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
+            color = color.copy(alpha = if (secondary) 0.7f else 1f),
+            fontWeight = if (bold) androidx.compose.ui.text.font.FontWeight.Bold else null
+        )
     }
 }

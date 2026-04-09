@@ -1,0 +1,59 @@
+-- Customer table for tracking buyers/customers
+CREATE TABLE CustomerEntity (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    address TEXT,
+    notes TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX customer_name_idx ON CustomerEntity(name);
+
+-- Get all customers ordered by name
+selectAll:
+SELECT *
+FROM CustomerEntity
+ORDER BY name ASC;
+
+-- Get customer by ID
+selectById:
+SELECT *
+FROM CustomerEntity
+WHERE id = ?;
+
+-- Search customers by name, phone, or email
+searchCustomers:
+SELECT *
+FROM CustomerEntity
+WHERE name LIKE '%' || ? || '%'
+   OR phone LIKE '%' || ? || '%'
+   OR email LIKE '%' || ? || '%'
+ORDER BY name ASC;
+
+-- Insert a new customer
+insert:
+INSERT INTO CustomerEntity(id, name, phone, email, address, notes, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Update a customer
+update:
+UPDATE CustomerEntity
+SET name = ?,
+    phone = ?,
+    email = ?,
+    address = ?,
+    notes = ?,
+    updated_at = ?
+WHERE id = ?;
+
+-- Delete a customer
+delete:
+DELETE FROM CustomerEntity
+WHERE id = ?;
+
+-- Count all customers
+countAll:
+SELECT COUNT(*) FROM CustomerEntity;

@@ -100,11 +100,17 @@ class ReportGenerator(
             )
             ReportType.SALES_REVENUE -> listOf(
                 ReportColumn("Date", 1f),
-                ReportColumn("Animal", 1.5f),
+                ReportColumn("Animal", 1.2f),
                 ReportColumn("Species", 1f),
+                ReportColumn("Age", 0.8f),
                 ReportColumn("Type", 0.8f),
-                ReportColumn("Revenue", 1f),
-                ReportColumn("Buyer", 1.2f)
+                ReportColumn("Live Wt", 0.7f),
+                ReportColumn("Dressed Wt", 0.8f),
+                ReportColumn("Gross Rev", 0.9f),
+                ReportColumn("Processing", 0.9f),
+                ReportColumn("Net Rev", 0.9f),
+                ReportColumn("$/lb", 0.7f),
+                ReportColumn("Buyer", 1f)
             )
         }
     }
@@ -483,7 +489,6 @@ class ReportGenerator(
         val animals = animalRepository.getAllAnimals().first()
         val animalMap = animals.associateBy { it.id }
 
-        // Get all STATUS_CHANGE and HARVEST events
         val statusEvents = eventRepository.getEventsByType(EventType.STATUS_CHANGE).first()
         val harvestEvents = eventRepository.getEventsByType(EventType.HARVEST).first()
         val allEvents = (statusEvents + harvestEvents).sortedByDescending { it.eventDate }
@@ -496,39 +501,79 @@ class ReportGenerator(
             val date: String,
             val animalName: String,
             val species: String,
+            val ageAtEvent: String,
             val type: String,
-            val revenue: Double?,
+            val liveWeight: String,
+            val dressedWeight: String,
+            val grossRevenue: Double?,
+            val processingCost: Double?,
+            val netRevenue: Double?,
+            val pricePerLb: Double?,
             val buyer: String?
         )
+
+        fun calcAge(animal: com.markduenas.homesteader.domain.model.Animal, eventDate: kotlinx.datetime.LocalDate): String {
+            val birth = animal.birthDate ?: return "-"
+            val days = (eventDate.toEpochDays() - birth.toEpochDays()).toInt()
+            if (days < 0) return "-"
+            return when {
+                days < 30 -> "$days days"
+                days < 365 -> "${days / 30} mo"
+                else -> "${days / 365} yr ${(days % 365) / 30} mo"
+            }
+        }
 
         val rows = filtered.mapNotNull { event ->
             val animal = animalMap[event.animalId] ?: return@mapNotNull null
             val name = animal.name ?: animal.tagId ?: event.animalId
             val species = animal.species.displayName
             val date = DateTimeUtil.formatDate(event.eventDate)
+            val age = calcAge(animal, event.eventDate)
 
             when (val data = event.eventData) {
                 is StatusChangeEventData -> RevenueRow(
                     date = date,
                     animalName = name,
                     species = species,
+                    ageAtEvent = age,
                     type = data.newStatus.lowercase().replaceFirstChar { it.uppercase() },
-                    revenue = data.salePrice,
+                    liveWeight = data.saleWeight?.let { "$it lbs" } ?: "-",
+                    dressedWeight = "-",
+                    grossRevenue = data.salePrice,
+                    processingCost = null,
+                    netRevenue = data.salePrice,
+                    pricePerLb = null,
                     buyer = data.buyer
                 )
-                is HarvestEventData -> RevenueRow(
-                    date = date,
-                    animalName = name,
-                    species = species,
-                    type = "Harvest (${data.purpose ?: "Personal Use"})",
-                    revenue = data.revenue,
-                    buyer = data.buyer
-                )
+                is HarvestEventData -> {
+                    val processingCost = (data.killFee ?: 0.0) +
+                        ((data.butcherPricePerPound ?: 0.0) * (data.dressedWeight ?: 0.0))
+                    val grossRev = data.revenue
+                    val netRev = if (grossRev != null) grossRev - processingCost else null
+                    val perLb = if (grossRev != null && data.dressedWeight != null && data.dressedWeight > 0.0)
+                        grossRev / data.dressedWeight else null
+                    RevenueRow(
+                        date = date,
+                        animalName = name,
+                        species = species,
+                        ageAtEvent = age,
+                        type = "Harvest (${data.purpose ?: "Personal Use"})",
+                        liveWeight = data.liveWeight?.let { "$it lbs" } ?: "-",
+                        dressedWeight = data.dressedWeight?.let { "$it lbs" } ?: "-",
+                        grossRevenue = grossRev,
+                        processingCost = if (processingCost > 0.0) processingCost else null,
+                        netRevenue = netRev,
+                        pricePerLb = perLb,
+                        buyer = data.buyer
+                    )
+                }
                 else -> null
             }
         }
 
-        val totalRevenue = rows.mapNotNull { it.revenue }.fold(0.0) { acc, v -> acc + v }
+        val totalGross = rows.mapNotNull { it.grossRevenue }.fold(0.0) { acc, v -> acc + v }
+        val totalNet = rows.mapNotNull { it.netRevenue }.fold(0.0) { acc, v -> acc + v }
+        val totalProcessing = rows.mapNotNull { it.processingCost }.fold(0.0) { acc, v -> acc + v }
         val soldCount = rows.count { it.type.contains("Sold", ignoreCase = true) }
         val harvestCount = rows.count { it.type.contains("Harvest", ignoreCase = true) }
 
@@ -539,7 +584,9 @@ class ReportGenerator(
             dateRange = dateRange,
             summary = ReportSummary(
                 items = listOf(
-                    SummaryItem("Total Revenue", "$${"%.2f".format(totalRevenue)}"),
+                    SummaryItem("Gross Revenue", "$${"%.2f".format(totalGross)}"),
+                    SummaryItem("Processing Costs", "$${"%.2f".format(totalProcessing)}"),
+                    SummaryItem("Net Revenue", "$${"%.2f".format(totalNet)}"),
                     SummaryItem("Animals Sold", soldCount.toString()),
                     SummaryItem("Animals Harvested", harvestCount.toString()),
                     SummaryItem("Total Records", rows.size.toString())
@@ -551,8 +598,14 @@ class ReportGenerator(
                         row.date,
                         row.animalName,
                         row.species,
+                        row.ageAtEvent,
                         row.type,
-                        row.revenue?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.liveWeight,
+                        row.dressedWeight,
+                        row.grossRevenue?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.processingCost?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.netRevenue?.let { "$${"%.2f".format(it)}" } ?: "-",
+                        row.pricePerLb?.let { "$${"%.2f".format(it)}" } ?: "-",
                         row.buyer ?: "-"
                     )
                 )

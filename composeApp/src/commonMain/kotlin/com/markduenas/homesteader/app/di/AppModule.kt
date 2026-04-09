@@ -10,6 +10,7 @@ import com.markduenas.homesteader.core.analytics.DebugCrashReportingService
 import com.markduenas.homesteader.data.database.DatabaseDriverFactory
 import com.markduenas.homesteader.data.database.HomesteaderDatabase
 import com.markduenas.homesteader.data.repository.AnimalRepository
+import com.markduenas.homesteader.data.repository.CustomerRepository
 import com.markduenas.homesteader.data.repository.EventRepository
 import com.markduenas.homesteader.data.repository.ReminderRepository
 import com.markduenas.homesteader.data.repository.SpeciesConfigRepository
@@ -29,6 +30,8 @@ import com.markduenas.homesteader.feature.dashboard.DashboardViewModel
 import com.markduenas.homesteader.feature.event.EventAddViewModel
 import com.markduenas.homesteader.feature.import.ImportViewModel
 import com.markduenas.homesteader.feature.premium.PremiumViewModel
+import com.markduenas.homesteader.feature.customers.CustomerDetailViewModel
+import com.markduenas.homesteader.feature.customers.CustomerListViewModel
 import com.markduenas.homesteader.feature.reports.ReportsViewModel
 import com.markduenas.homesteader.feature.setup.SpeciesSetupViewModel
 import org.koin.dsl.module
@@ -59,6 +62,7 @@ val databaseModule = module {
     single { get<HomesteaderDatabase>().speciesConfigQueries }
     single { get<HomesteaderDatabase>().animalEventQueries }
     single { get<HomesteaderDatabase>().reminderQueries }
+    single { get<HomesteaderDatabase>().customerQueries }
 }
 
 val repositoryModule = module {
@@ -66,6 +70,7 @@ val repositoryModule = module {
     single { EventRepository(get()) }
     single { ReminderRepository(get()) }
     single { SpeciesConfigRepository(get()) }
+    single { CustomerRepository(get()) }
 }
 
 val serviceModule = module {
@@ -87,6 +92,8 @@ val viewModelModule = module {
     factory { DashboardViewModel(get(), get(), get()) }
     factory { CalendarViewModel(get(), get(), get()) }
     factory { ReportsViewModel(get()) }
+    factory { CustomerListViewModel(get()) }
+    factory { CustomerDetailViewModel(get(), get(), get()) }
     factory { BackupViewModel(get()) }
     factory { ImportViewModel(get()) }
     factory { PremiumViewModel(get()) }

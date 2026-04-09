@@ -49,11 +49,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import com.markduenas.homesteader.core.designsystem.components.DatePickerField
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.domain.model.ReportColumn
 import com.markduenas.homesteader.domain.model.ReportData
 import com.markduenas.homesteader.domain.model.ReportRow
 import com.markduenas.homesteader.domain.model.ReportType
+import kotlinx.datetime.LocalDate
 
 class ReportsScreen : Screen {
 
@@ -123,8 +125,13 @@ private fun ReportsContent(
                 ReportSelectionView(
                     selectedReportType = state.selectedReportType,
                     dateRangeOption = state.dateRangeOption,
+                    customStartDate = state.customStartDate,
+                    customEndDate = state.customEndDate,
                     onSelectReportType = { onIntent(ReportsIntent.SelectReportType(it)) },
                     onSelectDateRange = { onIntent(ReportsIntent.SelectDateRange(it)) },
+                    onSetCustomDateRange = { start, end ->
+                        onIntent(ReportsIntent.SetCustomDateRange(start, end))
+                    },
                     onGenerateReport = { onIntent(ReportsIntent.GenerateReport) }
                 )
             }
@@ -136,8 +143,11 @@ private fun ReportsContent(
 private fun ReportSelectionView(
     selectedReportType: ReportType?,
     dateRangeOption: DateRangeOption,
+    customStartDate: LocalDate?,
+    customEndDate: LocalDate?,
     onSelectReportType: (ReportType) -> Unit,
     onSelectDateRange: (DateRangeOption) -> Unit,
+    onSetCustomDateRange: (LocalDate, LocalDate) -> Unit,
     onGenerateReport: () -> Unit
 ) {
     LazyColumn(
@@ -176,6 +186,16 @@ private fun ReportSelectionView(
                     selectedOption = dateRangeOption,
                     onSelectOption = onSelectDateRange
                 )
+            }
+
+            if (dateRangeOption == DateRangeOption.CUSTOM) {
+                item {
+                    CustomDateRangeInput(
+                        startDate = customStartDate,
+                        endDate = customEndDate,
+                        onSetRange = onSetCustomDateRange
+                    )
+                }
             }
 
             item {
@@ -253,7 +273,7 @@ private fun DateRangeSelector(
             .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        DateRangeOption.entries.filter { it != DateRangeOption.CUSTOM }.forEach { option ->
+        DateRangeOption.entries.forEach { option ->
             FilterChip(
                 selected = option == selectedOption,
                 onClick = { onSelectOption(option) },
@@ -475,6 +495,54 @@ private fun ReportTable(
                     modifier = Modifier.padding(8.dp)
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun CustomDateRangeInput(
+    startDate: LocalDate?,
+    endDate: LocalDate?,
+    onSetRange: (LocalDate, LocalDate) -> Unit
+) {
+    var startText by remember(startDate) { mutableStateOf(startDate?.toString() ?: "") }
+    var endText by remember(endDate) { mutableStateOf(endDate?.toString() ?: "") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Custom Date Range",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            DatePickerField(
+                value = startText,
+                onDateSelected = { selected ->
+                    startText = selected
+                    val end = runCatching { LocalDate.parse(endText) }.getOrNull()
+                    val start = runCatching { LocalDate.parse(selected) }.getOrNull()
+                    if (start != null && end != null) onSetRange(start, end)
+                },
+                label = "Start Date",
+                modifier = Modifier.fillMaxWidth()
+            )
+            DatePickerField(
+                value = endText,
+                onDateSelected = { selected ->
+                    endText = selected
+                    val start = runCatching { LocalDate.parse(startText) }.getOrNull()
+                    val end = runCatching { LocalDate.parse(selected) }.getOrNull()
+                    if (start != null && end != null) onSetRange(start, end)
+                },
+                label = "End Date",
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

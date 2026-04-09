@@ -31,6 +31,7 @@ import com.markduenas.homesteader.core.util.AppUrls
 import com.markduenas.homesteader.core.util.openUrl
 import com.markduenas.homesteader.feature.about.AboutScreen
 import com.markduenas.homesteader.feature.backup.BackupScreen
+import com.markduenas.homesteader.feature.customers.CustomerListScreen
 import com.markduenas.homesteader.feature.premium.PremiumScreen
 import com.markduenas.homesteader.feature.reports.ReportsScreen
 import com.markduenas.homesteader.feature.settings.SettingsScreen
@@ -43,6 +44,7 @@ class MoreScreen : Screen {
 
         MoreContent(
             onNavigateToReports = { navigator.push(ReportsScreen()) },
+            onNavigateToCustomers = { navigator.push(CustomerListScreen()) },
             onNavigateToSettings = { navigator.push(SettingsScreen()) },
             onNavigateToBackup = { navigator.push(BackupScreen()) },
             onNavigateToAbout = { navigator.push(AboutScreen()) },
@@ -56,6 +58,7 @@ class MoreScreen : Screen {
 @Composable
 private fun MoreContent(
     onNavigateToReports: () -> Unit,
+    onNavigateToCustomers: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToBackup: () -> Unit,
     onNavigateToAbout: () -> Unit,
@@ -84,6 +87,15 @@ private fun MoreContent(
                     title = "Reports",
                     subtitle = "Generate inventory, breeding, health, and production reports",
                     onClick = onNavigateToReports
+                )
+            }
+
+            item {
+                MoreMenuItem(
+                    icon = "👤",
+                    title = "Customers",
+                    subtitle = "Manage buyer profiles and purchase history",
+                    onClick = onNavigateToCustomers
                 )
             }
 

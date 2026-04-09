@@ -205,10 +205,11 @@ class AnimalEditViewModel(
                 val transitionData = currentState.pendingTransitionData
                 if (statusChanged && currentState.status != AnimalStatus.ACTIVE) {
                     val today = DateTimeUtil.today()
-                    if (currentState.status == AnimalStatus.DECEASED && transitionData != null
+                    val isHarvestEvent = currentState.status == AnimalStatus.DECEASED
+                        && transitionData != null
                         && transitionData.liveWeight != null
-                    ) {
-                        // Harvest event (user provided weight data)
+                    if (isHarvestEvent && transitionData != null) {
+                        // Harvest event (user provided weight data — planned slaughter)
                         eventRepository.insertEvent(
                             AnimalEvent(
                                 id = uuid4().toString(),
@@ -221,7 +222,11 @@ class AnimalEditViewModel(
                                     dressedWeight = transitionData.dressedWeight,
                                     purpose = transitionData.harvestPurpose,
                                     revenue = transitionData.harvestRevenue,
-                                    buyer = transitionData.buyer
+                                    buyer = transitionData.buyer,
+                                    customerId = transitionData.customerId,
+                                    killFee = transitionData.killFee,
+                                    butcherPricePerPound = transitionData.butcherPricePerPound,
+                                    numberOfAnimals = transitionData.numberOfAnimals
                                 )
                             )
                         )
@@ -240,7 +245,9 @@ class AnimalEditViewModel(
                                     reason = transitionData?.reason,
                                     salePrice = transitionData?.salePrice,
                                     buyer = transitionData?.buyer,
-                                    buyerContact = transitionData?.buyerContact
+                                    buyerContact = transitionData?.buyerContact,
+                                    customerId = transitionData?.customerId,
+                                    saleWeight = transitionData?.saleWeight
                                 )
                             )
                         )

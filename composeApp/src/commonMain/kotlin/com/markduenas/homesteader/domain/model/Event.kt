@@ -149,7 +149,10 @@ data class StatusChangeEventData(
     val reason: String? = null,
     val salePrice: Double? = null,
     val buyer: String? = null,
-    val buyerContact: String? = null
+    val buyerContact: String? = null,
+    val customerId: String? = null,
+    val saleWeight: Double? = null,
+    val weightUnit: String = "lbs"
 ) : EventData()
 
 @Serializable
@@ -157,9 +160,13 @@ data class HarvestEventData(
     val liveWeight: Double? = null,
     val dressedWeight: Double? = null,
     val weightUnit: String = "lbs",
-    val purpose: String? = null,     // "personal use", "sale", "donation"
-    val revenue: Double? = null,     // if sold
+    val purpose: String? = null,          // "personal use", "sale", "donation"
+    val revenue: Double? = null,          // gross revenue if sold
     val buyer: String? = null,
+    val customerId: String? = null,
+    val killFee: Double? = null,          // flat slaughter fee charged by processor
+    val butcherPricePerPound: Double? = null, // processing fee per lb of dressed weight
+    val numberOfAnimals: Int? = 1,        // for batch poultry harvests
     val notes: String? = null
 ) : EventData()
 
