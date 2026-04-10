@@ -31,6 +31,13 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onOpenURL { url in
+                    // Handle .vcf files shared/opened into the app
+                    guard url.pathExtension.lowercased() == "vcf" else { return }
+                    if let content = try? String(contentsOf: url, encoding: .utf8), !content.isEmpty {
+                        IncomingContactStore.shared.setPending(vcard: content)
+                    }
+                }
         }
     }
 }

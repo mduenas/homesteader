@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,7 +15,10 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import com.markduenas.homesteader.core.designsystem.HomesteaderTheme
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
+import com.markduenas.homesteader.core.util.IncomingContactStore
+import com.markduenas.homesteader.core.util.VCardParser
 import com.markduenas.homesteader.data.repository.SpeciesConfigRepository
+import com.markduenas.homesteader.feature.customers.ContactImportDialog
 import com.markduenas.homesteader.feature.main.MainScreen
 import com.markduenas.homesteader.feature.setup.SpeciesSetupScreen
 import kotlinx.coroutines.flow.first
@@ -33,6 +37,9 @@ fun App() {
 private fun AppContent() {
     val speciesConfigRepository: SpeciesConfigRepository = koinInject()
     var startScreen by remember { mutableStateOf<Screen?>(null) }
+
+    // Observe incoming shared contacts
+    val pendingVCard by IncomingContactStore.pendingVCard.collectAsState()
 
     LaunchedEffect(Unit) {
         // Initialize default configs if needed
@@ -57,5 +64,16 @@ private fun AppContent() {
     } else {
         // Show loading while determining start screen
         LoadingIndicator()
+    }
+
+    // Show contact import dialog when a vCard is shared into the app
+    pendingVCard?.let { vcard ->
+        val contact = remember(vcard) { VCardParser.parse(vcard) }
+        if (contact != null) {
+            ContactImportDialog(contact = contact)
+        } else {
+            // Couldn't parse the vCard — clear it silently
+            IncomingContactStore.clear()
+        }
     }
 }
