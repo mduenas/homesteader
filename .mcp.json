@@ -4,7 +4,7 @@
       "type": "http",
       "url": "http://localhost:8000/mcp",
       "headers": {
-        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOTgyNzU0OWUtM2RhOC00YzE1LTk2ZDktYzhkNjliNTM0NWJjIiwidGFibGVfbmFtZSI6Im1lbV85ODI3NTQ5ZV8zZGE4XzRjMTVfOTZkOV9jOGQ2OWI1MzQ1YmMiLCJjcmVhdGVkX2F0IjoiMjAyNi0wNC0wOVQyMzozMzowMi4xNTU0MDgiLCJleHAiOjE3NzgzOTExODJ9.qsf2UgK5FD8w_j0hU_cpcduhl4rjmlikOi3q7agPLNA"
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiOWEwOWM4NjYtYzA5Yy00ZDA3LTkyYWQtYjlkYjY5NmM2MTdjIiwidGFibGVfbmFtZSI6Im1lbV85YTA5Yzg2Nl9jMDljXzRkMDdfOTJhZF9iOWRiNjk2YzYxN2MiLCJjcmVhdGVkX2F0IjoiMjAyNi0wNC0xMFQxNzozMjoxMi40NzE4MjIiLCJleHAiOjE4MDczOTk5MzJ9.igbeUY5b-5LSjoIggVK2sJSxZ3PYyruFcQQYZSrXEtI"
       }
     }
   }
