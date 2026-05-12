@@ -29,7 +29,8 @@ data class ReportsState(
     val reportData: ReportData? = null,
     val reportColumns: List<ReportColumn> = emptyList(),
     val showDateRangePicker: Boolean = false,
-    val exportedContent: String? = null
+    val exportedContent: String? = null,
+    val harvestAgeYears: Int = 2
 )
 
 enum class DateRangeOption(val displayName: String) {
@@ -52,6 +53,7 @@ sealed class ReportsIntent {
     data object ShowDateRangePicker : ReportsIntent()
     data object HideDateRangePicker : ReportsIntent()
     data object ClearExportedContent : ReportsIntent()
+    data class SetHarvestAgeYears(val years: Int) : ReportsIntent()
 }
 
 sealed class ReportsEffect {
@@ -81,6 +83,7 @@ class ReportsViewModel(
             ReportsIntent.ShowDateRangePicker -> _state.update { it.copy(showDateRangePicker = true) }
             ReportsIntent.HideDateRangePicker -> _state.update { it.copy(showDateRangePicker = false) }
             ReportsIntent.ClearExportedContent -> _state.update { it.copy(exportedContent = null) }
+            is ReportsIntent.SetHarvestAgeYears -> _state.update { it.copy(harvestAgeYears = intent.years) }
         }
     }
 
@@ -150,7 +153,7 @@ class ReportsViewModel(
 
             try {
                 val dateRange = getDateRange()
-                val reportData = reportGenerator.generateReport(reportType, dateRange)
+                val reportData = reportGenerator.generateReport(reportType, dateRange, _state.value.harvestAgeYears)
 
                 _state.update {
                     it.copy(

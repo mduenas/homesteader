@@ -127,11 +127,13 @@ private fun ReportsContent(
                     dateRangeOption = state.dateRangeOption,
                     customStartDate = state.customStartDate,
                     customEndDate = state.customEndDate,
+                    harvestAgeYears = state.harvestAgeYears,
                     onSelectReportType = { onIntent(ReportsIntent.SelectReportType(it)) },
                     onSelectDateRange = { onIntent(ReportsIntent.SelectDateRange(it)) },
                     onSetCustomDateRange = { start, end ->
                         onIntent(ReportsIntent.SetCustomDateRange(start, end))
                     },
+                    onSetHarvestAgeYears = { onIntent(ReportsIntent.SetHarvestAgeYears(it)) },
                     onGenerateReport = { onIntent(ReportsIntent.GenerateReport) }
                 )
             }
@@ -145,9 +147,11 @@ private fun ReportSelectionView(
     dateRangeOption: DateRangeOption,
     customStartDate: LocalDate?,
     customEndDate: LocalDate?,
+    harvestAgeYears: Int,
     onSelectReportType: (ReportType) -> Unit,
     onSelectDateRange: (DateRangeOption) -> Unit,
     onSetCustomDateRange: (LocalDate, LocalDate) -> Unit,
+    onSetHarvestAgeYears: (Int) -> Unit,
     onGenerateReport: () -> Unit
 ) {
     LazyColumn(
@@ -194,6 +198,15 @@ private fun ReportSelectionView(
                         startDate = customStartDate,
                         endDate = customEndDate,
                         onSetRange = onSetCustomDateRange
+                    )
+                }
+            }
+
+            if (selectedReportType == ReportType.STEER_HARVEST_AVAILABILITY) {
+                item {
+                    HarvestAgeInput(
+                        harvestAgeYears = harvestAgeYears,
+                        onSetHarvestAgeYears = onSetHarvestAgeYears
                     )
                 }
             }
@@ -541,6 +554,43 @@ private fun CustomDateRangeInput(
                     if (start != null && end != null) onSetRange(start, end)
                 },
                 label = "End Date",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun HarvestAgeInput(
+    harvestAgeYears: Int,
+    onSetHarvestAgeYears: (Int) -> Unit
+) {
+    var text by remember(harvestAgeYears) { mutableStateOf(harvestAgeYears.toString()) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Harvest Age Target",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            androidx.compose.material3.OutlinedTextField(
+                value = text,
+                onValueChange = { newVal ->
+                    text = newVal
+                    newVal.toIntOrNull()?.takeIf { it > 0 }?.let(onSetHarvestAgeYears)
+                },
+                label = { Text("Years until harvest") },
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                    keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
         }

@@ -30,6 +30,8 @@ import com.markduenas.homesteader.domain.model.StatusChangeEventData
 import com.markduenas.homesteader.domain.model.WeightEventData
 import com.markduenas.homesteader.domain.model.WeightRow
 import com.markduenas.homesteader.domain.model.WeightTrackingReport
+import com.markduenas.homesteader.domain.model.Sex
+import com.markduenas.homesteader.domain.model.Species
 import kotlinx.coroutines.flow.first
 import kotlinx.datetime.LocalDate
 
@@ -40,7 +42,8 @@ class ReportGenerator(
 
     suspend fun generateReport(
         reportType: ReportType,
-        dateRange: DateRange? = null
+        dateRange: DateRange? = null,
+        harvestAgeYears: Int = 2
     ): ReportData {
         return when (reportType) {
             ReportType.ANIMAL_INVENTORY -> generateAnimalInventoryReport()
@@ -50,6 +53,7 @@ class ReportGenerator(
             ReportType.WEIGHT_TRACKING -> generateWeightTrackingReport(dateRange)
             ReportType.EVENT_TIMELINE -> generateEventTimelineReport(dateRange)
             ReportType.SALES_REVENUE -> generateSalesRevenueReport(dateRange)
+            ReportType.STEER_HARVEST_AVAILABILITY -> generateSteerHarvestAvailabilityReport(harvestAgeYears)
         }
     }
 
@@ -112,6 +116,15 @@ class ReportGenerator(
                 ReportColumn("Net Rev", 0.9f),
                 ReportColumn("$/lb", 0.7f),
                 ReportColumn("Buyer", 1f)
+            )
+            ReportType.STEER_HARVEST_AVAILABILITY -> listOf(
+                ReportColumn("Name", 1.5f),
+                ReportColumn("Tag #", 1f),
+                ReportColumn("Breed", 1f),
+                ReportColumn("Birth Date", 1f),
+                ReportColumn("Age", 0.8f),
+                ReportColumn("Harvest Date", 1f),
+                ReportColumn("Status", 1.2f)
             )
         }
     }
@@ -611,6 +624,86 @@ class ReportGenerator(
                     )
                 )
             }
+        )
+    }
+
+    private suspend fun generateSteerHarvestAvailabilityReport(harvestAgeYears: Int): ReportData {
+        val animals = animalRepository.getAllAnimals().first()
+        val today = DateTimeUtil.today()
+        val harvestAgeDays = harvestAgeYears * 365
+
+        val maleCattle = animals.filter {
+            (it.species == Species.CATTLE_BEEF || it.species == Species.CATTLE_DAIRY) &&
+                it.sex == Sex.MALE &&
+                it.status == AnimalStatus.ACTIVE
+        }
+
+        val withBirthDate = maleCattle.filter { it.birthDate != null }
+        val noBirthDate = maleCattle.filter { it.birthDate == null }
+
+        val sorted = withBirthDate.sortedBy { it.birthDate!!.toEpochDays() + harvestAgeDays }
+
+        val todayEpoch = today.toEpochDays()
+        val readyCount = sorted.count { todayEpoch >= it.birthDate!!.toEpochDays() + harvestAgeDays }
+        val within90 = sorted.count {
+            val daysUntil = (it.birthDate!!.toEpochDays() + harvestAgeDays) - todayEpoch
+            daysUntil in 1..90
+        }
+        val within180 = sorted.count {
+            val daysUntil = (it.birthDate!!.toEpochDays() + harvestAgeDays) - todayEpoch
+            daysUntil in 91..180
+        }
+
+        val summaryItems = mutableListOf(
+            SummaryItem("Total Active Male Cattle", maleCattle.size.toString()),
+            SummaryItem("Ready Now", readyCount.toString()),
+            SummaryItem("Within 90 Days", within90.toString()),
+            SummaryItem("Within 180 Days", within180.toString())
+        )
+        if (noBirthDate.isNotEmpty()) {
+            summaryItems.add(SummaryItem("No Birth Date", noBirthDate.size.toString()))
+        }
+
+        val dataRows = sorted.map { animal ->
+            val harvestEpoch = animal.birthDate!!.toEpochDays() + harvestAgeDays
+            val daysUntil = harvestEpoch - todayEpoch
+            val ageInDays = todayEpoch - animal.birthDate.toEpochDays()
+            val ageYears = ageInDays / 365.0
+            val harvestDate = LocalDate.fromEpochDays(harvestEpoch)
+            val statusLabel = when {
+                daysUntil <= 0 -> "Ready Now"
+                daysUntil <= 90 -> "Within 90 days"
+                daysUntil <= 180 -> "Within 180 days"
+                else -> "> 6 months"
+            }
+            ReportRow(listOf(
+                animal.displayName,
+                animal.tagId ?: "-",
+                animal.breed ?: "-",
+                animal.birthDate.toString(),
+                "${ageYears.formatDecimal(1)} yrs",
+                harvestDate.toString(),
+                statusLabel
+            ))
+        } + noBirthDate.map { animal ->
+            ReportRow(listOf(
+                animal.displayName,
+                animal.tagId ?: "-",
+                animal.breed ?: "-",
+                "Unknown",
+                "-",
+                "-",
+                "No birth date"
+            ))
+        }
+
+        return ReportData(
+            reportType = ReportType.STEER_HARVEST_AVAILABILITY,
+            title = "Steer Harvest Availability ($harvestAgeYears-Year Target)",
+            generatedAt = DateTimeUtil.nowIsoString(),
+            dateRange = null,
+            summary = ReportSummary(summaryItems),
+            rows = dataRows
         )
     }
 }

@@ -12,7 +12,8 @@ enum class ReportType(val displayName: String, val description: String) {
     PRODUCTION_REPORT("Production Report", "Milk, egg, and fiber production records"),
     WEIGHT_TRACKING("Weight Tracking", "Weight records and growth trends"),
     EVENT_TIMELINE("Event Timeline", "All events in chronological order"),
-    SALES_REVENUE("Sales & Revenue", "Revenue from sold and harvested animals")
+    SALES_REVENUE("Sales & Revenue", "Revenue from sold and harvested animals"),
+    STEER_HARVEST_AVAILABILITY("Steer Harvest Availability", "Active male cattle approaching or ready for harvest")
 }
 
 /**
