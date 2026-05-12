@@ -114,7 +114,7 @@ android {
         applicationId = "com.markduenas.homesteader"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 13
+        versionCode = 14
         versionName = "2.2"
     }
 
