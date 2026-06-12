@@ -20,6 +20,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -29,20 +31,27 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.markduenas.homesteader.core.util.AppUrls
 import com.markduenas.homesteader.core.util.openUrl
+import com.markduenas.homesteader.domain.monetization.PremiumManager
 import com.markduenas.homesteader.feature.about.AboutScreen
 import com.markduenas.homesteader.feature.backup.BackupScreen
 import com.markduenas.homesteader.feature.customers.CustomerListScreen
 import com.markduenas.homesteader.feature.premium.PremiumScreen
 import com.markduenas.homesteader.feature.reports.ReportsScreen
 import com.markduenas.homesteader.feature.settings.SettingsScreen
+import org.koin.compose.koinInject
 
 class MoreScreen : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val premiumManager: PremiumManager = koinInject()
+        val isPremium by premiumManager.isPremium.collectAsState()
+        val productInfo by premiumManager.productInfo.collectAsState()
 
         MoreContent(
+            isPremium = isPremium,
+            premiumPrice = productInfo?.formattedPrice,
             onNavigateToReports = { navigator.push(ReportsScreen()) },
             onNavigateToCustomers = { navigator.push(CustomerListScreen()) },
             onNavigateToSettings = { navigator.push(SettingsScreen()) },
@@ -57,6 +66,8 @@ class MoreScreen : Screen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoreContent(
+    isPremium: Boolean,
+    premiumPrice: String?,
     onNavigateToReports: () -> Unit,
     onNavigateToCustomers: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -83,7 +94,7 @@ private fun MoreContent(
 
             item {
                 MoreMenuItem(
-                    icon = "R",
+                    icon = "📊",
                     title = "Reports",
                     subtitle = "Generate inventory, breeding, health, and production reports",
                     onClick = onNavigateToReports
@@ -101,7 +112,7 @@ private fun MoreContent(
 
             item {
                 MoreMenuItem(
-                    icon = "B",
+                    icon = "💾",
                     title = "Backup & Restore",
                     subtitle = "Create backups and restore your data",
                     onClick = onNavigateToBackup
@@ -120,7 +131,7 @@ private fun MoreContent(
 
             item {
                 MoreMenuItem(
-                    icon = "S",
+                    icon = "⚙️",
                     title = "Settings",
                     subtitle = "Configure species, units, and app preferences",
                     onClick = onNavigateToSettings
@@ -139,7 +150,7 @@ private fun MoreContent(
 
             item {
                 MoreMenuItem(
-                    icon = "i",
+                    icon = "ℹ️",
                     title = "About Steady Hand",
                     subtitle = "Version info and support",
                     onClick = onNavigateToAbout
@@ -148,47 +159,47 @@ private fun MoreContent(
 
             item {
                 MoreMenuItem(
-                    icon = "P",
+                    icon = "🔒",
                     title = "Privacy Policy",
                     subtitle = "How we handle your data",
                     onClick = onOpenPrivacyPolicy
                 )
             }
 
-            item {
-                Spacer(modifier = Modifier.height(32.dp))
+            // Only show upgrade card for non-premium users
+            if (!isPremium) {
+                item {
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                // Premium upgrade card
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onNavigateToPremium),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onNavigateToPremium),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        )
                     ) {
-                        Text(
-                            text = "Remove Ads",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Support development and enjoy an ad-free experience with a one-time purchase.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "$7.99 - One-time purchase",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "🌾 Upgrade to Premium",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Unlimited animals, CSV export, and no ads — one-time purchase.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = if (premiumPrice != null) "$premiumPrice — One-time purchase" else "One-time purchase",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
                     }
                 }
             }
@@ -250,8 +261,8 @@ private fun MoreMenuItem(
             }
 
             Text(
-                text = ">",
-                style = MaterialTheme.typography.titleMedium,
+                text = "›",
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

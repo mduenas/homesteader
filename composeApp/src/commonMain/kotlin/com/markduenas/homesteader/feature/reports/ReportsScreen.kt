@@ -49,6 +49,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.markduenas.homesteader.feature.premium.PremiumScreen
 import com.markduenas.homesteader.core.designsystem.components.DatePickerField
 import com.markduenas.homesteader.core.designsystem.components.LoadingIndicator
 import com.markduenas.homesteader.domain.model.ReportColumn
@@ -61,6 +64,7 @@ class ReportsScreen : Screen {
 
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val viewModel = koinScreenModel<ReportsViewModel>()
         val state by viewModel.state.collectAsState()
 
@@ -72,6 +76,9 @@ class ReportsScreen : Screen {
                     }
                     is ReportsEffect.ShareContent -> {
                         // Handle share/export
+                    }
+                    ReportsEffect.ShowPremiumUpsell -> {
+                        navigator.push(PremiumScreen())
                     }
                 }
             }
@@ -346,13 +353,13 @@ private fun ReportResultView(
                     onClick = onExportCsv,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Export CSV")
+                    Text("Export CSV ⭐")
                 }
                 OutlinedButton(
                     onClick = onExportText,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Export Text")
+                    Text("Export Text ⭐")
                 }
             }
         }

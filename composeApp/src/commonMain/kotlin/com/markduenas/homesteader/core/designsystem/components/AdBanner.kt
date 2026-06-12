@@ -2,12 +2,8 @@ package com.markduenas.homesteader.core.designsystem.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,22 +46,16 @@ fun AdBanner(
     adManager: AdManager,
     modifier: Modifier = Modifier
 ) {
-    val isPremium by adManager.isPremium.collectAsState()
+    val shouldShowAds by adManager.shouldShowAds.collectAsState(initial = false)
 
-    // Show ads if user is not premium (includes safe area padding)
-    if (!isPremium) {
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
-        ) {
-            PlatformAdBanner(
-                adUnitId = adManager.getBannerAdUnitId(),
-                onAdLoaded = { adManager.onAdLoaded() },
-                onAdFailedToLoad = { error -> adManager.onAdFailedToLoad(error) },
-                modifier = Modifier
-            )
-        }
+    // Only render when an ad is actually loaded and user is not premium
+    if (shouldShowAds) {
+        PlatformAdBanner(
+            adUnitId = adManager.getBannerAdUnitId(),
+            onAdLoaded = { adManager.onAdLoaded() },
+            onAdFailedToLoad = { error -> adManager.onAdFailedToLoad(error) },
+            modifier = modifier.fillMaxWidth()
+        )
     }
 }
 

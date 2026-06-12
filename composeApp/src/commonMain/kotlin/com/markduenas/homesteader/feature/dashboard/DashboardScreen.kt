@@ -55,9 +55,11 @@ import com.markduenas.homesteader.domain.model.AnimalEvent
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.EventCategory
 import com.markduenas.homesteader.domain.model.Species
+import com.markduenas.homesteader.domain.monetization.FREE_TIER_ANIMAL_LIMIT
 import com.markduenas.homesteader.feature.animal.detail.AnimalDetailScreen
 import com.markduenas.homesteader.feature.animal.edit.AnimalEditScreen
 import com.markduenas.homesteader.feature.animal.list.AnimalListScreen
+import com.markduenas.homesteader.feature.premium.PremiumScreen
 
 class DashboardScreen : Screen {
 
@@ -78,6 +80,9 @@ class DashboardScreen : Screen {
                     }
                     DashboardEffect.NavigateToAddAnimal -> {
                         navigator.push(AnimalEditScreen())
+                    }
+                    DashboardEffect.NavigateToPremium -> {
+                        navigator.push(PremiumScreen())
                     }
                 }
             }
@@ -138,6 +143,16 @@ private fun DashboardContent(
                             animalsByStatus = state.animalsByStatus,
                             onViewAll = { onIntent(DashboardIntent.ViewAllAnimals) }
                         )
+                    }
+
+                    // Premium upgrade prompt — shown when near or at free-tier animal limit
+                    if (state.showUpgradePrompt) {
+                        item {
+                            UpgradePromptCard(
+                                animalCount = state.totalAnimals,
+                                onUpgrade = { onIntent(DashboardIntent.UpgradeToPremium) }
+                            )
+                        }
                     }
 
                     // Species Breakdown Widget
@@ -582,6 +597,54 @@ private fun ActivityItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline
         )
+    }
+}
+
+@Composable
+private fun UpgradePromptCard(
+    animalCount: Int,
+    onUpgrade: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onUpgrade),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "🌾 Upgrade to Premium",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "You have $animalCount of $FREE_TIER_ANIMAL_LIMIT animals. " +
+                           "Upgrade for unlimited animals, CSV export, and no ads.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(onClick = onUpgrade) {
+                Text(
+                    text = "Upgrade",
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
     }
 }
 

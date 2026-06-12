@@ -10,6 +10,8 @@ import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.Reminder
 import com.markduenas.homesteader.domain.model.ReminderType
 import com.markduenas.homesteader.domain.model.Species
+import com.markduenas.homesteader.domain.monetization.FREE_TIER_ANIMAL_LIMIT
+import com.markduenas.homesteader.domain.monetization.PremiumManager
 import com.markduenas.homesteader.domain.service.ReminderService
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +39,11 @@ data class DashboardState(
 
     // Upcoming tasks from reminders
     val upcomingTasks: List<UpcomingTask> = emptyList(),
-    val overdueCount: Int = 0
+    val overdueCount: Int = 0,
+
+    // Premium upsell
+    val isPremium: Boolean = false,
+    val showUpgradePrompt: Boolean = false
 )
 
 data class UpcomingTask(
@@ -71,18 +77,21 @@ sealed class DashboardIntent {
     data object ViewAllAnimals : DashboardIntent()
     data object AddAnimal : DashboardIntent()
     data class CompleteTask(val taskId: String) : DashboardIntent()
+    data object UpgradeToPremium : DashboardIntent()
 }
 
 sealed class DashboardEffect {
     data class NavigateToAnimalDetail(val animalId: String) : DashboardEffect()
     data object NavigateToAnimalList : DashboardEffect()
     data object NavigateToAddAnimal : DashboardEffect()
+    data object NavigateToPremium : DashboardEffect()
 }
 
 class DashboardViewModel(
     private val animalRepository: AnimalRepository,
     private val eventRepository: EventRepository,
-    private val reminderService: ReminderService
+    private val reminderService: ReminderService,
+    private val premiumManager: PremiumManager
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(DashboardState())
@@ -96,6 +105,7 @@ class DashboardViewModel(
 
     init {
         loadDashboardData()
+        observePremiumStatus()
     }
 
     fun handleIntent(intent: DashboardIntent) {
@@ -105,6 +115,15 @@ class DashboardViewModel(
             DashboardIntent.ViewAllAnimals -> navigateToAnimalList()
             DashboardIntent.AddAnimal -> navigateToAddAnimal()
             is DashboardIntent.CompleteTask -> completeTask(intent.taskId)
+            DashboardIntent.UpgradeToPremium -> navigateToPremium()
+        }
+    }
+
+    private fun observePremiumStatus() {
+        screenModelScope.launch {
+            premiumManager.isPremium.collect { isPremium ->
+                _state.update { it.copy(isPremium = isPremium) }
+            }
         }
     }
 
@@ -149,6 +168,10 @@ class DashboardViewModel(
                     // Combine overdue (first) and upcoming tasks
                     val allTasks = overdueTasks + upcomingTasks
 
+                    val isPremium = premiumManager.isPremium.value
+                    val showUpgradePrompt = !isPremium &&
+                        data.animals.size >= FREE_TIER_ANIMAL_LIMIT - 5
+
                     _state.update {
                         it.copy(
                             isLoading = false,
@@ -159,7 +182,9 @@ class DashboardViewModel(
                             recentEvents = data.recentEvents,
                             recentAnimals = recentAnimals,
                             upcomingTasks = allTasks,
-                            overdueCount = data.overdueReminders.size
+                            overdueCount = data.overdueReminders.size,
+                            isPremium = isPremium,
+                            showUpgradePrompt = showUpgradePrompt
                         )
                     }
                 }
@@ -235,6 +260,12 @@ class DashboardViewModel(
     private fun navigateToAddAnimal() {
         screenModelScope.launch {
             _effects.send(DashboardEffect.NavigateToAddAnimal)
+        }
+    }
+
+    private fun navigateToPremium() {
+        screenModelScope.launch {
+            _effects.send(DashboardEffect.NavigateToPremium)
         }
     }
 }

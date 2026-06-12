@@ -1,6 +1,7 @@
 package com.markduenas.homesteader.feature.main
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -43,17 +44,16 @@ class MainScreen : Screen {
             tabDisposable = { TabDisposable(it, listOf(DashboardTab, AnimalsTab, CalendarTab, MoreTab)) }
         ) { tabNavigator ->
             Scaffold(
-                topBar = {
-                    // Ad banner at top (handles its own safe area padding)
-                    AdBanner(adManager = adManager)
-                },
                 bottomBar = {
-                    // Bottom navigation
-                    NavigationBar {
-                        TabNavigationItem(DashboardTab)
-                        TabNavigationItem(AnimalsTab)
-                        TabNavigationItem(CalendarTab)
-                        TabNavigationItem(MoreTab)
+                    Column {
+                        // Ad banner sits above nav bar; only renders when an ad is actually loaded
+                        AdBanner(adManager = adManager)
+                        NavigationBar {
+                            TabNavigationItem(DashboardTab)
+                            TabNavigationItem(AnimalsTab)
+                            TabNavigationItem(CalendarTab)
+                            TabNavigationItem(MoreTab)
+                        }
                     }
                 }
             ) { paddingValues ->

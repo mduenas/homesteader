@@ -7,6 +7,7 @@ import com.markduenas.homesteader.domain.model.DateRange
 import com.markduenas.homesteader.domain.model.ReportColumn
 import com.markduenas.homesteader.domain.model.ReportData
 import com.markduenas.homesteader.domain.model.ReportType
+import com.markduenas.homesteader.domain.monetization.PremiumManager
 import com.markduenas.homesteader.domain.service.ReportGenerator
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,10 +60,12 @@ sealed class ReportsIntent {
 sealed class ReportsEffect {
     data class ShowError(val message: String) : ReportsEffect()
     data class ShareContent(val content: String, val filename: String, val mimeType: String) : ReportsEffect()
+    data object ShowPremiumUpsell : ReportsEffect()
 }
 
 class ReportsViewModel(
-    private val reportGenerator: ReportGenerator
+    private val reportGenerator: ReportGenerator,
+    private val premiumManager: PremiumManager
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(ReportsState())
@@ -183,6 +186,10 @@ class ReportsViewModel(
         val columns = _state.value.reportColumns
 
         screenModelScope.launch {
+            if (!premiumManager.isPremium.value) {
+                _effects.send(ReportsEffect.ShowPremiumUpsell)
+                return@launch
+            }
             try {
                 val csv = reportGenerator.exportToCsv(reportData, columns)
                 val filename = "${reportData.reportType.name.lowercase()}_${DateTimeUtil.nowIsoString().replace(":", "-")}.csv"
@@ -199,6 +206,10 @@ class ReportsViewModel(
         val columns = _state.value.reportColumns
 
         screenModelScope.launch {
+            if (!premiumManager.isPremium.value) {
+                _effects.send(ReportsEffect.ShowPremiumUpsell)
+                return@launch
+            }
             try {
                 val text = reportGenerator.exportToText(reportData, columns)
                 val filename = "${reportData.reportType.name.lowercase()}_${DateTimeUtil.nowIsoString().replace(":", "-")}.txt"

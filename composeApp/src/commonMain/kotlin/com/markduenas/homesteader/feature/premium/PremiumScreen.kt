@@ -21,6 +21,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -47,12 +51,13 @@ class PremiumScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = koinScreenModel<PremiumViewModel>()
         val state by viewModel.state.collectAsState()
+        val snackbarHostState = remember { SnackbarHostState() }
 
         LaunchedEffect(Unit) {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     is PremiumEffect.ShowMessage -> {
-                        // Show snackbar or toast
+                        snackbarHostState.showSnackbar(effect.message)
                     }
                     PremiumEffect.PurchaseSuccess -> {
                         navigator.pop()
@@ -63,6 +68,7 @@ class PremiumScreen : Screen {
 
         PremiumContent(
             state = state,
+            snackbarHostState = snackbarHostState,
             onIntent = viewModel::handleIntent,
             onNavigateBack = { navigator.pop() }
         )
@@ -73,22 +79,28 @@ class PremiumScreen : Screen {
 @Composable
 private fun PremiumContent(
     state: PremiumState,
+    snackbarHostState: SnackbarHostState,
     onIntent: (PremiumIntent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Go Premium") },
+                title = { Text("Steady Hand Premium") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Text("<", style = MaterialTheme.typography.titleLarge)
+                        Text("←", style = MaterialTheme.typography.titleLarge)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(snackbarData = data)
+            }
         }
     ) { paddingValues ->
         Box(
@@ -104,10 +116,8 @@ private fun PremiumContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (state.isPremium) {
-                    // Already premium view
                     PremiumActiveView()
                 } else {
-                    // Purchase view
                     PremiumPurchaseView(
                         state = state,
                         onPurchase = { onIntent(PremiumIntent.Purchase) },
@@ -115,7 +125,6 @@ private fun PremiumContent(
                     )
                 }
 
-                // Error display
                 state.error?.let { error ->
                     Spacer(modifier = Modifier.height(16.dp))
                     Card(
@@ -145,7 +154,6 @@ private fun PremiumContent(
                 }
             }
 
-            // Loading overlay
             if (state.isProcessing) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -155,9 +163,7 @@ private fun PremiumContent(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(16.dp))
                             Text("Processing...")
@@ -177,7 +183,6 @@ private fun PremiumActiveView() {
     ) {
         Spacer(modifier = Modifier.height(48.dp))
 
-        // Checkmark icon
         Surface(
             modifier = Modifier.size(80.dp),
             shape = MaterialTheme.shapes.extraLarge,
@@ -227,7 +232,6 @@ private fun PremiumPurchaseView(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
-        // App icon placeholder
         Surface(
             modifier = Modifier.size(80.dp),
             shape = MaterialTheme.shapes.large,
@@ -238,10 +242,8 @@ private fun PremiumPurchaseView(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "H",
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    text = "🌾",
+                    style = MaterialTheme.typography.displaySmall
                 )
             }
         }
@@ -254,82 +256,91 @@ private fun PremiumPurchaseView(
             fontWeight = FontWeight.Bold
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Unlock the full power of your farm records",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Features list
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = "What you get:",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
+                FeatureItem("Unlimited animals (free tier: 20)")
+                FeatureItem("Export reports to CSV")
                 FeatureItem("Remove all advertisements")
                 FeatureItem("Support independent development")
-                FeatureItem("One-time purchase - no subscriptions")
-                FeatureItem("All future features included")
+                FeatureItem("One-time purchase — no subscriptions")
             }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Price card
-        state.product?.let { product ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
+        // Price card — only shown once billing is ready
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                if (state.isReady && state.product != null) {
                     Text(
-                        text = product.price,
+                        text = state.product.price,
                         style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
-                    Text(
-                        text = "One-time purchase",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
+                Text(
+                    text = "One-time purchase",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Purchase button
         Button(
             onClick = onPurchase,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = !state.isProcessing
+            enabled = state.isReady && !state.isProcessing
         ) {
             Text(
-                text = "Remove Ads",
+                text = if (state.isReady) "Upgrade to Premium" else "Loading…",
                 style = MaterialTheme.typography.titleMedium
             )
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Restore button
         OutlinedButton(
             onClick = onRestore,
             modifier = Modifier.fillMaxWidth(),
@@ -340,7 +351,6 @@ private fun PremiumPurchaseView(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Terms text
         Text(
             text = "Payment will be charged to your App Store or Google Play account. " +
                    "This is a one-time purchase with no recurring charges.",

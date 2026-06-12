@@ -74,6 +74,11 @@ sealed class BillingResult {
 }
 
 /**
- * Product ID for the premium (remove ads) purchase.
+ * Product ID for the premium purchase.
  */
 const val PREMIUM_PRODUCT_ID = "homesteader_remove_ads"
+
+/**
+ * Free tier animal limit. Users above this count must upgrade to premium to add more.
+ */
+const val FREE_TIER_ANIMAL_LIMIT = 20

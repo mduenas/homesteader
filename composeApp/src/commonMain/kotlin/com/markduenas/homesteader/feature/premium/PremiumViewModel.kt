@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 data class PremiumState(
     val isPremium: Boolean = false,
+    val isReady: Boolean = false,
     val isProcessing: Boolean = false,
     val product: PremiumProduct? = null,
     val error: String? = null
@@ -42,11 +43,13 @@ class PremiumViewModel(
 
     val state: StateFlow<PremiumState> = combine(
         premiumManager.isPremium,
+        premiumManager.isReady,
         premiumManager.purchaseState,
         _error
-    ) { isPremium, purchaseState, error ->
+    ) { isPremium, isReady, purchaseState, error ->
         PremiumState(
             isPremium = isPremium,
+            isReady = isReady,
             isProcessing = purchaseState is PurchaseState.Processing ||
                           purchaseState is PurchaseState.Restoring,
             product = premiumManager.getPremiumProductInfo(),

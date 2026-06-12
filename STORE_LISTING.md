@@ -47,7 +47,7 @@ DATA SECURITY
 - Import animals via CSV for easy migration
 - All data stored locally on your device
 
-Whether you raise beef cattle, dairy goats, laying hens, or a diverse mix of livestock, Homesteader helps you stay organized and make informed decisions for your operation.
+Whether you raise beef cattle, dairy goats, laying hens, or a diverse mix of livestock, Steady Hand helps you stay organized and make informed decisions for your operation.
 
 Download now and take control of your farm records.
 
@@ -103,7 +103,7 @@ DATA SECURITY
 - Import animals via CSV for easy migration
 - All data stored locally on your device
 
-Whether you raise beef cattle, dairy goats, laying hens, or a diverse mix of livestock, Homesteader helps you stay organized and make informed decisions for your operation.
+Whether you raise beef cattle, dairy goats, laying hens, or a diverse mix of livestock, Steady Hand helps you stay organized and make informed decisions for your operation.
 
 ### Keywords (100 chars max)
 livestock,farm,cattle,goats,sheep,chickens,breeding,herd,flock,homestead,ranch,poultry,animals

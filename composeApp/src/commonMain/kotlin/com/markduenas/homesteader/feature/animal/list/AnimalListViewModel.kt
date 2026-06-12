@@ -9,6 +9,8 @@ import com.markduenas.homesteader.data.repository.AnimalRepository
 import com.markduenas.homesteader.domain.model.Animal
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.domain.model.Species
+import com.markduenas.homesteader.domain.monetization.FREE_TIER_ANIMAL_LIMIT
+import com.markduenas.homesteader.domain.monetization.PremiumManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,8 +30,14 @@ data class AnimalListState(
     val searchQuery: String = "",
     val selectedSpecies: Species? = null,
     val selectedStatus: AnimalStatus? = null,
-    val availableSpecies: List<Species> = emptyList()
-) : UiState
+    val availableSpecies: List<Species> = emptyList(),
+    val isPremium: Boolean = false,
+    val freeTierLimit: Int = FREE_TIER_ANIMAL_LIMIT
+) : UiState {
+    val animalCount: Int get() = allAnimals.size
+    val atFreeLimit: Boolean get() = !isPremium && animalCount >= freeTierLimit
+    val nearFreeLimit: Boolean get() = !isPremium && animalCount >= freeTierLimit - 5
+}
 
 sealed interface AnimalListIntent : UiIntent {
     data object LoadAnimals : AnimalListIntent
@@ -44,10 +52,12 @@ sealed interface AnimalListIntent : UiIntent {
 sealed interface AnimalListEffect : UiEffect {
     data class NavigateToDetail(val animalId: String) : AnimalListEffect
     data object NavigateToAdd : AnimalListEffect
+    data object ShowPremiumUpsell : AnimalListEffect
 }
 
 class AnimalListViewModel(
-    private val animalRepository: AnimalRepository
+    private val animalRepository: AnimalRepository,
+    private val premiumManager: PremiumManager
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(AnimalListState())
@@ -60,13 +70,14 @@ class AnimalListViewModel(
 
     init {
         loadAnimals()
+        observePremiumStatus()
     }
 
     fun handleIntent(intent: AnimalListIntent) {
         when (intent) {
             is AnimalListIntent.LoadAnimals -> loadAnimals()
             is AnimalListIntent.SelectAnimal -> navigateToDetail(intent.animalId)
-            is AnimalListIntent.AddAnimal -> navigateToAdd()
+            is AnimalListIntent.AddAnimal -> onAddAnimal()
             is AnimalListIntent.Search -> search(intent.query)
             is AnimalListIntent.FilterBySpecies -> filterBySpecies(intent.species)
             is AnimalListIntent.FilterByStatus -> filterByStatus(intent.status)
@@ -98,15 +109,27 @@ class AnimalListViewModel(
         }
     }
 
-    private fun navigateToDetail(animalId: String) {
+    private fun observePremiumStatus() {
         screenModelScope.launch {
-            _effects.send(AnimalListEffect.NavigateToDetail(animalId))
+            premiumManager.isPremium.collect { isPremium ->
+                _state.update { it.copy(isPremium = isPremium) }
+            }
         }
     }
 
-    private fun navigateToAdd() {
+    private fun onAddAnimal() {
         screenModelScope.launch {
-            _effects.send(AnimalListEffect.NavigateToAdd)
+            if (_state.value.atFreeLimit) {
+                _effects.send(AnimalListEffect.ShowPremiumUpsell)
+            } else {
+                _effects.send(AnimalListEffect.NavigateToAdd)
+            }
+        }
+    }
+
+    private fun navigateToDetail(animalId: String) {
+        screenModelScope.launch {
+            _effects.send(AnimalListEffect.NavigateToDetail(animalId))
         }
     }
 

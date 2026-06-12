@@ -40,6 +40,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.ButtonDefaults
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -53,6 +54,7 @@ import com.markduenas.homesteader.domain.model.Animal
 import com.markduenas.homesteader.domain.model.AnimalStatus
 import com.markduenas.homesteader.feature.animal.detail.AnimalDetailScreen
 import com.markduenas.homesteader.feature.animal.edit.AnimalEditScreen
+import com.markduenas.homesteader.feature.premium.PremiumScreen
 
 class AnimalListScreen : Screen {
 
@@ -70,6 +72,9 @@ class AnimalListScreen : Screen {
                     }
                     is AnimalListEffect.NavigateToAdd -> {
                         navigator.push(AnimalEditScreen())
+                    }
+                    AnimalListEffect.ShowPremiumUpsell -> {
+                        navigator.push(PremiumScreen())
                     }
                 }
             }
@@ -121,6 +126,53 @@ private fun AnimalListContent(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 singleLine = true
             )
+
+            // Free-tier capacity warning banner
+            if (state.nearFreeLimit) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (state.atFreeLimit)
+                            MaterialTheme.colorScheme.errorContainer
+                        else
+                            MaterialTheme.colorScheme.tertiaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (state.atFreeLimit)
+                                "Animal limit reached (${state.animalCount}/${state.freeTierLimit}). Upgrade to add more."
+                            else
+                                "${state.animalCount}/${state.freeTierLimit} animals — upgrade for unlimited.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (state.atFreeLimit)
+                                MaterialTheme.colorScheme.onErrorContainer
+                            else
+                                MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        androidx.compose.material3.TextButton(
+                            onClick = { onIntent(AnimalListIntent.AddAnimal) },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = if (state.atFreeLimit)
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                else
+                                    MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        ) {
+                            Text("Upgrade", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+            }
 
             // Filter chips
             if (state.availableSpecies.isNotEmpty() || state.selectedStatus != null) {
