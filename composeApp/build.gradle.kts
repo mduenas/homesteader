@@ -20,6 +20,18 @@ plugins {
     alias(libs.plugins.firebaseCrashlytics)
 }
 
+// Version from root version.properties (CI can override -PversionCode / -PversionName)
+val versionPropertiesFile = rootProject.file("version.properties")
+val versionProperties = Properties()
+if (versionPropertiesFile.exists()) {
+    versionProperties.load(versionPropertiesFile.inputStream())
+}
+val ciVersionCode = project.findProperty("versionCode")?.toString()?.toIntOrNull()
+val ciVersionName = project.findProperty("versionName")?.toString()
+val appVersionCode = ciVersionCode ?: versionProperties.getProperty("versionCode", "1").toInt()
+val appVersionName = ciVersionName ?: versionProperties.getProperty("versionName", "1.0")
+
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -114,8 +126,8 @@ android {
         applicationId = "com.markduenas.homesteader"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 15
-        versionName = "2.3"
+        versionCode = appVersionCode
+        versionName = appVersionName
     }
 
     signingConfigs {
