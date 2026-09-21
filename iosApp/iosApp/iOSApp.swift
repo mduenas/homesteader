@@ -34,6 +34,13 @@ struct iOSApp: App {
                 .onOpenURL { url in
                     // Handle .vcf files shared/opened into the app
                     guard url.pathExtension.lowercased() == "vcf" else { return }
+                    let didAccessScopedResource = url.startAccessingSecurityScopedResource()
+                    defer {
+                        if didAccessScopedResource {
+                            url.stopAccessingSecurityScopedResource()
+                        }
+                    }
+
                     if let content = try? String(contentsOf: url, encoding: .utf8), !content.isEmpty {
                         IncomingContactStore.shared.setPending(vcard: content)
                     }
